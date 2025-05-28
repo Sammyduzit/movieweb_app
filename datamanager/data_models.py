@@ -1,5 +1,4 @@
-from database import db
-
+from .database import db
 
 class User(db.Model):
     """User model for the database"""

@@ -1,6 +1,6 @@
-from data_manager_interface import DataManagerInterface
-from data_models import User, Movie
-from database import db
+from .data_manager_interface import DataManagerInterface
+from .data_models import User, Movie
+from .database import db
 
 class SQLiteDataManager(DataManagerInterface):
     """SQLite implementation of the DataManagerInterface using SQLAlchemy ORM"""
