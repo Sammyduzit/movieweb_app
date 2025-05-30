@@ -6,6 +6,7 @@ from exceptions import (
     UserNotFoundError, MovieNotFoundError, ReviewNotFoundError,
     ValidationError, DatabaseError
 )
+from utils.decorators import require_user_and_movie
 
 review_bp = Blueprint('reviews', __name__, url_prefix='/users/<int:user_id>/movies/<int:movie_id>')
 
@@ -15,27 +16,17 @@ review_service = ReviewService()
 
 
 @review_bp.route('/add_review', methods=['POST'])
-def add_review(user_id, movie_id):
+@require_user_and_movie
+def add_review(user_id, movie_id, user, movie):
     """Add a review to a movie"""
+    review_data = {
+        'content': request.form.get('content', '').strip(),
+        'reviewer_rating': request.form.get('reviewer_rating')
+    }
+
     try:
-        user_service.get_user_by_id(user_id)
-        movie_service.get_movie_for_user(user_id, movie_id)
-
-        review_data = {
-            'content': request.form.get('content', '').strip(),
-            'reviewer_rating': request.form.get('reviewer_rating')
-        }
-
         review_service.create_review(movie_id, review_data)
         flash('Review added successfully!', 'success')
-
-    except UserNotFoundError:
-        flash('User not found', 'error')
-        return redirect(url_for('users.list_users'))
-
-    except MovieNotFoundError:
-        flash('Movie not found', 'error')
-        return redirect(url_for('movies.user_movies', user_id=user_id))
 
     except ValidationError as e:
         flash(f'Validation error: {e.message}', 'error')
@@ -50,7 +41,8 @@ def add_review(user_id, movie_id):
 
 
 @review_bp.route('/like_review/<int:review_id>')
-def like_review(user_id, movie_id, review_id):
+@require_user_and_movie
+def like_review(user_id, movie_id, review_id, user, movie):  # both injected!
     """Like a review"""
     try:
         review_service.like_review(review_id)
@@ -69,12 +61,11 @@ def like_review(user_id, movie_id, review_id):
 
 
 @review_bp.route('/edit_review/<int:review_id>', methods=['GET', 'POST'])
-def edit_review(user_id, movie_id, review_id):
+@require_user_and_movie
+def edit_review(user_id, movie_id, review_id, user, movie):
     """Edit a review"""
     try:
-        user = user_service.get_user_by_id(user_id)
-        movie = movie_service.get_movie_for_user(user_id, movie_id)
-
+        # Get existing reviews to find the one being edited
         reviews = review_service.get_movie_reviews(movie_id)
         review = next((r for r in reviews if r['id'] == review_id), None)
 
@@ -98,14 +89,6 @@ def edit_review(user_id, movie_id, review_id):
 
         return render_template('edit_review.html', user=user, movie=movie, review=review)
 
-    except UserNotFoundError:
-        flash('User not found', 'error')
-        return redirect(url_for('users.list_users'))
-
-    except MovieNotFoundError:
-        flash('Movie not found', 'error')
-        return redirect(url_for('movies.user_movies', user_id=user_id))
-
     except ReviewNotFoundError:
         flash('Review not found', 'error')
         return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
@@ -120,7 +103,8 @@ def edit_review(user_id, movie_id, review_id):
 
 
 @review_bp.route('/delete_review/<int:review_id>')
-def delete_review_route(user_id, movie_id, review_id):
+@require_user_and_movie
+def delete_review_route(user_id, movie_id, review_id, user, movie):  # both injected!
     """Delete a review"""
     try:
         review_service.delete_review(review_id)

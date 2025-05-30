@@ -5,6 +5,7 @@ from exceptions import (
     TriviaError, UserNotFoundError, MovieNotFoundError,
     InsufficientMoviesError, ExternalAPIError
 )
+from utils.decorators import require_user, require_user_and_movie
 
 trivia_bp = Blueprint('trivia', __name__)
 
@@ -14,7 +15,8 @@ trivia_service = TriviaService()
 # ==================== MOVIE TRIVIA ====================
 
 @trivia_bp.route('/users/<int:user_id>/movies/<int:movie_id>/trivia')
-def movie_trivia(user_id, movie_id):
+@require_user_and_movie
+def movie_trivia(user_id, movie_id, user, movie):
     """Start trivia for a specific movie (7 questions)"""
     try:
         trivia_data = trivia_service.generate_movie_trivia(user_id, movie_id)
@@ -31,18 +33,10 @@ def movie_trivia(user_id, movie_id):
 
         return redirect(url_for('trivia.trivia_question'))
 
-    except UserNotFoundError:
-        flash('User not found', 'error')
-        return redirect(url_for('users.list_users'))
-
-    except MovieNotFoundError:
-        flash('Movie not found', 'error')
-        return redirect(url_for('movies.user_movies', user_id=user_id))
-
     except TriviaError as e:
         return render_template('trivia_error.html',
-                               user=trivia_data.get('user', {'id': user_id}),
-                               movie=trivia_data.get('movie', {'id': movie_id}),
+                               user=user,
+                               movie=movie,
                                error_type=e.trivia_type,
                                back_url=url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
@@ -54,11 +48,11 @@ def movie_trivia(user_id, movie_id):
         flash(f'Unexpected error: {str(e)}', 'error')
         return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
-
 # ==================== COLLECTION TRIVIA ====================
 
 @trivia_bp.route('/users/<int:user_id>/trivia')
-def collection_trivia(user_id):
+@require_user
+def collection_trivia(user_id, user):
     """Start trivia for user's entire collection (21 questions)"""
     try:
         trivia_data = trivia_service.generate_collection_trivia(user_id)
@@ -74,17 +68,13 @@ def collection_trivia(user_id):
 
         return redirect(url_for('trivia.trivia_question'))
 
-    except UserNotFoundError:
-        flash('User not found', 'error')
-        return redirect(url_for('users.list_users'))
-
     except InsufficientMoviesError as e:
-        flash(f'You need at least {TriviaConfig.MIN_MOVIES_FOR_COLLECTION} movies for collection trivia! You have {e.movie_count}.', 'error')
+        flash(f'You need at least {e.required_count} movies for collection trivia! You have {e.movie_count}.', 'error')
         return redirect(url_for('movies.user_movies', user_id=user_id))
 
     except TriviaError as e:
         return render_template('trivia_error.html',
-                               user=trivia_data.get('user', {'id': user_id}),
+                               user=user,
                                error_type=e.trivia_type,
                                back_url=url_for('movies.user_movies', user_id=user_id))
 
@@ -234,12 +224,10 @@ def collection_leaderboard():
 
 
 @trivia_bp.route('/users/<int:user_id>/movies/<int:movie_id>/leaderboard')
-def movie_leaderboard(user_id, movie_id):
+@require_user_and_movie
+def movie_leaderboard(user_id, movie_id, user, movie):
     """Movie-specific leaderboard"""
     try:
-        trivia_service.validate_user(user_id)
-        movie = trivia_service.validate_movie(user_id, movie_id)
-
         leaderboard = trivia_service.get_leaderboard('movie', movie_id=movie_id, limit=15)
 
         return render_template('leaderboard.html',
@@ -249,21 +237,14 @@ def movie_leaderboard(user_id, movie_id):
                                movie=movie,
                                back_url=url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
-    except UserNotFoundError:
-        flash('User not found', 'error')
-        return redirect(url_for('users.list_users'))
-
-    except MovieNotFoundError:
-        flash('Movie not found', 'error')
-        return redirect(url_for('movies.user_movies', user_id=user_id))
-
     except Exception as e:
         flash(f'Error loading movie leaderboard: {str(e)}', 'error')
         return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
 
 @trivia_bp.route('/users/<int:user_id>/trivia-stats')
-def user_trivia_stats(user_id):
+@require_user
+def user_trivia_stats(user_id, user):
     """User's personal trivia statistics"""
     try:
         user_stats = trivia_service.get_user_stats(user_id)
@@ -271,10 +252,6 @@ def user_trivia_stats(user_id):
         return render_template('user_trivia_stats.html',
                                user=user_stats['user'],
                                stats=user_stats['stats'])
-
-    except UserNotFoundError:
-        flash('User not found', 'error')
-        return redirect(url_for('users.list_users'))
 
     except Exception as e:
         flash(f'Error loading trivia stats: {str(e)}', 'error')
