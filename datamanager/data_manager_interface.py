@@ -37,3 +37,28 @@ class DataManagerInterface(ABC):
     def delete_movie(self, movie_id):
         """Delete a movie by ID"""
         pass
+
+    @abstractmethod
+    def add_review(self, movie_id, review_data):
+        """Add a review to a movie"""
+        pass
+
+    @abstractmethod
+    def get_movie_reviews(self, movie_id):
+        """Get all reviews for a specific movie"""
+        pass
+
+    @abstractmethod
+    def update_review(self, review_id, updated_data):
+        """Update a review by ID"""
+        pass
+
+    @abstractmethod
+    def delete_review(self, review_id):
+        """Delete a review by ID"""
+        pass
+
+    @abstractmethod
+    def like_review(self, review_id):
+        """Increment likes for a review"""
+        pass

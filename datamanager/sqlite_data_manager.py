@@ -1,6 +1,7 @@
 from .data_manager_interface import DataManagerInterface
 from .data_models import User, Movie
 from .database import db
+from flask import current_app
 
 class SQLiteDataManager(DataManagerInterface):
     """SQLite implementation of the DataManagerInterface using SQLAlchemy ORM"""
@@ -62,15 +63,21 @@ class SQLiteDataManager(DataManagerInterface):
             title=movie_data.get('title'),
             director=movie_data.get('director'),
             year=movie_data.get('year'),
-            rating=movie_data.get('rating'),
+            rating=movie_data.get('imdb_rating') or movie_data.get('rating'),
             genre=movie_data.get('genre'),
+            poster=movie_data.get('poster'),
             user_id=user_id
         )
 
-        db.session.add(new_movie)
-        db.session.commit()
+        try:
+            db.session.add(new_movie)
+            db.session.commit()
+            return new_movie.to_dict()
+        except Exception as e:
+            print(f"Database error: {e}")
+            db.session.rollback()
+            raise
 
-        return new_movie.to_dict()
 
     def add_movie(self, movie_data):
         """
@@ -89,8 +96,9 @@ class SQLiteDataManager(DataManagerInterface):
             title=movie_data.get('title'),
             director=movie_data.get('director'),
             year=movie_data.get('year'),
-            rating=movie_data.get('rating'),
+            rating=movie_data.get('imdb_rating') or movie_data.get('rating'),
             genre=movie_data.get('genre'),
+            poster=movie_data.get('poster'),
             user_id=user_id
         )
 
@@ -121,6 +129,8 @@ class SQLiteDataManager(DataManagerInterface):
             movie.rating = updated_data['rating']
         if 'genre' in updated_data:
             movie.genre = updated_data['genre']
+        if 'poster' in updated_data:
+            movie.poster = updated_data['poster']
 
         db.session.commit()
 
@@ -136,3 +146,72 @@ class SQLiteDataManager(DataManagerInterface):
         movie = Movie.query.get(movie_id)
         if not movie:
             return False
+
+        db.session.delete(movie)
+        db.session.commit()
+
+        return True
+
+    def add_review(self, movie_id, review_data):
+        """Add a review to a movie"""
+        from .data_models import Review
+
+        movie = Movie.query.get(movie_id)
+        if not movie:
+            raise ValueError(f"Movie with ID {movie_id} not found")
+
+        new_review = Review(
+            content=review_data.get('content'),
+            reviewer_rating=review_data.get('reviewer_rating'),
+            movie_id=movie_id
+        )
+
+        db.session.add(new_review)
+        db.session.commit()
+        return new_review.to_dict()
+
+    def get_movie_reviews(self, movie_id):
+        """Get all reviews for a specific movie"""
+        from .data_models import Review
+        reviews = Review.query.filter_by(movie_id=movie_id).all()
+        return [review.to_dict() for review in reviews]
+
+    def like_review(self, review_id):
+        """Increment likes for a review"""
+        from .data_models import Review
+        review = Review.query.get(review_id)
+        if review:
+            review.likes += 1
+            db.session.commit()
+            return review.to_dict()
+        return None
+
+    def update_review(self, review_id, updated_data):
+        """Update a review by ID"""
+        from .data_models import Review
+
+        review = Review.query.get(review_id)
+        if not review:
+            return None
+
+        if 'content' in updated_data:
+            review.content = updated_data['content']
+        if 'reviewer_rating' in updated_data:
+            review.reviewer_rating = updated_data['reviewer_rating']
+
+        review.updated_at = db.func.current_timestamp()
+
+        db.session.commit()
+        return review.to_dict()
+
+    def delete_review(self, review_id):
+        """Delete a review by ID"""
+        from .data_models import Review
+
+        review = Review.query.get(review_id)
+        if not review:
+            return False
+
+        db.session.delete(review)
+        db.session.commit()
+        return True
