@@ -1,50 +1,67 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from datamanager import SQLiteDataManager
-from sqlalchemy.exc import SQLAlchemyError
+from services.user_service import UserService
+from services.movie_service import MovieService
+from services.review_service import ReviewService
+from exceptions import (
+    UserNotFoundError, MovieNotFoundError, ReviewNotFoundError,
+    ValidationError, DatabaseError
+)
 
 review_bp = Blueprint('reviews', __name__, url_prefix='/users/<int:user_id>/movies/<int:movie_id>')
 
-data_manager = SQLiteDataManager()
+user_service = UserService()
+movie_service = MovieService()
+review_service = ReviewService()
 
 
 @review_bp.route('/add_review', methods=['POST'])
 def add_review(user_id, movie_id):
     """Add a review to a movie"""
     try:
+        user_service.get_user_by_id(user_id)
+        movie_service.get_movie_for_user(user_id, movie_id)
+
         review_data = {
             'content': request.form.get('content', '').strip(),
             'reviewer_rating': request.form.get('reviewer_rating')
         }
 
-        if not review_data['content']:
-            flash('Review content is required', 'error')
-            return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
-
-        if review_data['reviewer_rating']:
-            try:
-                review_data['reviewer_rating'] = int(review_data['reviewer_rating'])
-                if not (1 <= review_data['reviewer_rating'] <= 10):
-                    flash('Rating must be between 1 and 10', 'error')
-                    return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
-            except ValueError:
-                flash('Invalid rating format', 'error')
-                return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
-
-        new_review = data_manager.add_review(movie_id, review_data)
+        review_service.create_review(movie_id, review_data)
         flash('Review added successfully!', 'success')
-        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    except UserNotFoundError:
+        flash('User not found', 'error')
+        return redirect(url_for('users.list_users'))
+
+    except MovieNotFoundError:
+        flash('Movie not found', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
+    except ValidationError as e:
+        flash(f'Validation error: {e.message}', 'error')
+
+    except DatabaseError as e:
+        flash(f'Database error: {e.message}', 'error')
 
     except Exception as e:
         flash(f'Error adding review: {str(e)}', 'error')
-        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
 
 @review_bp.route('/like_review/<int:review_id>')
 def like_review(user_id, movie_id, review_id):
     """Like a review"""
     try:
-        data_manager.like_review(review_id)
+        review_service.like_review(review_id)
         flash('Review liked!', 'success')
+
+    except ReviewNotFoundError:
+        flash('Review not found', 'error')
+
+    except DatabaseError as e:
+        flash(f'Database error: {e.message}', 'error')
+
     except Exception as e:
         flash(f'Error liking review: {str(e)}', 'error')
 
@@ -55,21 +72,14 @@ def like_review(user_id, movie_id, review_id):
 def edit_review(user_id, movie_id, review_id):
     """Edit a review"""
     try:
-        users = data_manager.get_all_users()
-        user = next((u for u in users if u['id'] == user_id), None)
-        movies = data_manager.get_user_movies(user_id)
-        movie = next((m for m in movies if m['id'] == movie_id), None)
+        user = user_service.get_user_by_id(user_id)
+        movie = movie_service.get_movie_for_user(user_id, movie_id)
 
-        if not user or not movie:
-            flash('User or movie not found', 'error')
-            return redirect(url_for('users.list_users'))
-
-        reviews = data_manager.get_movie_reviews(movie_id)
+        reviews = review_service.get_movie_reviews(movie_id)
         review = next((r for r in reviews if r['id'] == review_id), None)
 
         if not review:
-            flash('Review not found', 'error')
-            return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+            raise ReviewNotFoundError(review_id)
 
         if request.method == 'POST':
             updated_data = {
@@ -77,29 +87,32 @@ def edit_review(user_id, movie_id, review_id):
                 'reviewer_rating': request.form.get('reviewer_rating')
             }
 
-            if not updated_data['content']:
-                flash('Review content is required', 'error')
+            try:
+                review_service.update_review(review_id, updated_data)
+                flash('Review updated successfully!', 'success')
+                return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+            except ValidationError as e:
+                flash(f'Validation error: {e.message}', 'error')
                 return render_template('edit_review.html', user=user, movie=movie, review=review)
 
-            if updated_data['reviewer_rating']:
-                try:
-                    updated_data['reviewer_rating'] = int(updated_data['reviewer_rating'])
-                    if not (1 <= updated_data['reviewer_rating'] <= 10):
-                        flash('Rating must be between 1 and 10', 'error')
-                        return render_template('edit_review.html', user=user, movie=movie, review=review)
-                except ValueError:
-                    flash('Invalid rating format', 'error')
-                    return render_template('edit_review.html', user=user, movie=movie, review=review)
-
-            result = data_manager.update_review(review_id, updated_data)
-            if result:
-                flash('Review updated successfully!', 'success')
-            else:
-                flash('Error updating review', 'error')
-
-            return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
-
         return render_template('edit_review.html', user=user, movie=movie, review=review)
+
+    except UserNotFoundError:
+        flash('User not found', 'error')
+        return redirect(url_for('users.list_users'))
+
+    except MovieNotFoundError:
+        flash('Movie not found', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
+    except ReviewNotFoundError:
+        flash('Review not found', 'error')
+        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    except DatabaseError as e:
+        flash(f'Database error: {e.message}', 'error')
+        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
     except Exception as e:
         flash(f'Error editing review: {str(e)}', 'error')
@@ -110,15 +123,16 @@ def edit_review(user_id, movie_id, review_id):
 def delete_review_route(user_id, movie_id, review_id):
     """Delete a review"""
     try:
-        success = data_manager.delete_review(review_id)
+        review_service.delete_review(review_id)
+        flash('Review deleted successfully!', 'success')
 
-        if success:
-            flash('Review deleted successfully!', 'success')
-        else:
-            flash('Review not found or could not be deleted', 'error')
+    except ReviewNotFoundError:
+        flash('Review not found or already deleted', 'warning')
 
-        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+    except DatabaseError as e:
+        flash(f'Database error: {e.message}', 'error')
 
     except Exception as e:
         flash(f'Error deleting review: {str(e)}', 'error')
-        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))

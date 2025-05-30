@@ -1,21 +1,23 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from datamanager import SQLiteDataManager
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from services.user_service import UserService
+from exceptions import ValidationError, DatabaseError
 
 user_bp = Blueprint('users', __name__, url_prefix='/users')
 
-data_manager = SQLiteDataManager()
+user_service = UserService()
 
 
 @user_bp.route('/')
 def list_users():
     """Display all users in an HTML template."""
     try:
-        users = data_manager.get_all_users()
+        users = user_service.get_all_users()
         return render_template('users.html', users=users)
-    except SQLAlchemyError as e:
-        flash(f'Database error loading users: {str(e)}', 'error')
+
+    except DatabaseError as e:
+        flash(f'Database error: {e.message}', 'error')
         return render_template('users.html', users=[])
+
     except Exception as e:
         flash(f'Unexpected error loading users: {str(e)}', 'error')
         return render_template('users.html', users=[])
@@ -31,20 +33,21 @@ def add_user():
                 'email': request.form.get('email', '').strip()
             }
 
-            if not user_data['name'] or not user_data['email']:
-                flash('Name and email are required', 'error')
-                return render_template('add_user.html')
-
-            new_user = data_manager.add_user(user_data)
+            new_user = user_service.create_user(user_data)
             flash(f'User {new_user["name"]} added successfully!', 'success')
             return redirect(url_for('users.list_users'))
 
-        except IntegrityError as e:
-            flash('Email already exists. Please use a different email.', 'error')
+        except ValidationError as e:
+            if e.field == 'email' and 'already exists' in e.message:
+                flash('Email already exists. Please use a different email.', 'error')
+            else:
+                flash(f'Validation error: {e.message}', 'error')
             return render_template('add_user.html')
-        except SQLAlchemyError as e:
-            flash(f'Database error adding user: {str(e)}', 'error')
+
+        except DatabaseError as e:
+            flash(f'Database error: {e.message}', 'error')
             return render_template('add_user.html')
+
         except Exception as e:
             flash(f'Unexpected error adding user: {str(e)}', 'error')
             return render_template('add_user.html')

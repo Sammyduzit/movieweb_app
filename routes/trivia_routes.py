@@ -1,11 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from datamanager import SQLiteDataManager, RapidAPIService
-import random
+from services.trivia_service import TriviaService
+from exceptions import (
+    TriviaError, UserNotFoundError, MovieNotFoundError,
+    InsufficientMoviesError, ExternalAPIError
+)
 
 trivia_bp = Blueprint('trivia', __name__)
 
-data_manager = SQLiteDataManager()
-rapidapi_service = RapidAPIService()
+trivia_service = TriviaService()
 
 
 # ==================== MOVIE TRIVIA ====================
@@ -14,34 +16,13 @@ rapidapi_service = RapidAPIService()
 def movie_trivia(user_id, movie_id):
     """Start trivia for a specific movie (7 questions)"""
     try:
-        users = data_manager.get_all_users()
-        user = next((u for u in users if u['id'] == user_id), None)
-
-        if not user:
-            flash('User not found', 'error')
-            return redirect(url_for('users.list_users'))
-
-        movies = data_manager.get_user_movies(user_id)
-        movie = next((m for m in movies if m['id'] == movie_id), None)
-
-        if not movie:
-            flash('Movie not found', 'error')
-            return redirect(url_for('movies.user_movies', user_id=user_id))
-
-        trivia_data = rapidapi_service.generate_movie_trivia(movie)
-
-        if not trivia_data or not trivia_data.get('questions'):
-            return render_template('trivia_error.html', user=user, movie=movie,
-                                   error_type='movie',
-                                   back_url=url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
-
-        questions = trivia_data['questions'][:7]  # Ensure exactly 7 questions
+        trivia_data = trivia_service.generate_movie_trivia(user_id, movie_id)
 
         session['trivia_session'] = {
-            'type': 'movie',
-            'user_id': user_id,
-            'movie_id': movie_id,
-            'questions': questions,
+            'type': trivia_data['type'],
+            'user_id': trivia_data['user_id'],
+            'movie_id': trivia_data['movie_id'],
+            'questions': trivia_data['questions'],
             'current_question': 0,
             'score': 0,
             'answers': []
@@ -49,8 +30,27 @@ def movie_trivia(user_id, movie_id):
 
         return redirect(url_for('trivia.trivia_question'))
 
+    except UserNotFoundError:
+        flash('User not found', 'error')
+        return redirect(url_for('users.list_users'))
+
+    except MovieNotFoundError:
+        flash('Movie not found', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
+    except TriviaError as e:
+        return render_template('trivia_error.html',
+                               user=trivia_data.get('user', {'id': user_id}),
+                               movie=trivia_data.get('movie', {'id': movie_id}),
+                               error_type=e.trivia_type,
+                               back_url=url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    except ExternalAPIError as e:
+        flash(f'API Error: {e.message}', 'error')
+        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
     except Exception as e:
-        flash(f'Error starting trivia: {str(e)}', 'error')
+        flash(f'Unexpected error: {str(e)}', 'error')
         return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
 
 
@@ -60,31 +60,12 @@ def movie_trivia(user_id, movie_id):
 def collection_trivia(user_id):
     """Start trivia for user's entire collection (21 questions)"""
     try:
-        users = data_manager.get_all_users()
-        user = next((u for u in users if u['id'] == user_id), None)
-
-        if not user:
-            flash('User not found', 'error')
-            return redirect(url_for('users.list_users'))
-
-        movies = data_manager.get_user_movies(user_id)
-
-        if len(movies) < 3:
-            flash('You need at least 3 movies for collection trivia!', 'error')
-            return redirect(url_for('movies.user_movies', user_id=user_id))
-
-        trivia_data = rapidapi_service.generate_collection_trivia(movies)
-
-        if not trivia_data or not trivia_data.get('questions'):
-            return render_template('trivia_error.html', user=user,
-                                   error_type='collection', back_url=url_for('movies.user_movies', user_id=user_id))
-
-        questions = trivia_data['questions'][:21]  # Ensure exactly 21 questions
+        trivia_data = trivia_service.generate_collection_trivia(user_id)
 
         session['trivia_session'] = {
-            'type': 'collection',
-            'user_id': user_id,
-            'questions': questions,
+            'type': trivia_data['type'],
+            'user_id': trivia_data['user_id'],
+            'questions': trivia_data['questions'],
             'current_question': 0,
             'score': 0,
             'answers': []
@@ -92,8 +73,26 @@ def collection_trivia(user_id):
 
         return redirect(url_for('trivia.trivia_question'))
 
+    except UserNotFoundError:
+        flash('User not found', 'error')
+        return redirect(url_for('users.list_users'))
+
+    except InsufficientMoviesError as e:
+        flash(f'You need at least {e.required_count} movies for collection trivia! You have {e.movie_count}.', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
+    except TriviaError as e:
+        return render_template('trivia_error.html',
+                               user=trivia_data.get('user', {'id': user_id}),
+                               error_type=e.trivia_type,
+                               back_url=url_for('movies.user_movies', user_id=user_id))
+
+    except ExternalAPIError as e:
+        flash(f'API Error: {e.message}', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
     except Exception as e:
-        flash(f'Error starting trivia: {str(e)}', 'error')
+        flash(f'Unexpected error: {str(e)}', 'error')
         return redirect(url_for('movies.user_movies', user_id=user_id))
 
 
@@ -111,7 +110,6 @@ def trivia_question():
     current_q = trivia_session['current_question']
     questions = trivia_session['questions']
 
-    # Check if trivia is complete
     if current_q >= len(questions):
         return redirect(url_for('trivia.trivia_results'))
 
@@ -139,34 +137,17 @@ def trivia_answer():
 
     try:
         user_answer = int(request.form.get('answer', -1))
-        current_q = trivia_session['current_question']
-        questions = trivia_session['questions']
 
-        if current_q >= len(questions):
-            return redirect(url_for('trivia.trivia_results'))
-
-        question = questions[current_q]
-        correct_answer = question.get('correct', 0)
-        is_correct = user_answer == correct_answer
-
-        trivia_session['answers'].append({
-            'question': question['question'],
-            'user_answer': user_answer,
-            'correct_answer': correct_answer,
-            'is_correct': is_correct,
-            'options': question.get('options', [])
-        })
-
-        if is_correct:
-            trivia_session['score'] += 1
-
-        trivia_session['current_question'] += 1
-        session['trivia_session'] = trivia_session
+        updated_session = trivia_service.process_trivia_answer(trivia_session, user_answer)
+        session['trivia_session'] = updated_session
 
         return redirect(url_for('trivia.trivia_question'))
 
     except ValueError:
         flash('Invalid answer format', 'error')
+        return redirect(url_for('trivia.trivia_question'))
+    except Exception as e:
+        flash(f'Error processing answer: {str(e)}', 'error')
         return redirect(url_for('trivia.trivia_question'))
 
 
@@ -179,57 +160,25 @@ def trivia_results():
         flash('No trivia session found', 'error')
         return redirect(url_for('users.list_users'))
 
-    total_questions = len(trivia_session['questions'])
-    score = trivia_session['score']
-    percentage = round((score / total_questions) * 100) if total_questions > 0 else 0
-
     try:
-        score_data = {
-            'user_id': trivia_session['user_id'],
-            'trivia_type': trivia_session['type'],
-            'movie_id': trivia_session.get('movie_id'),
-            'score': score,
-            'total_questions': total_questions,
-            'percentage': percentage,
-            'completion_time': None
-        }
+        results = trivia_service.calculate_trivia_results(trivia_session)
 
-        data_manager.save_trivia_score(score_data)
-        print(f"✅ Saved trivia score: {score}/{total_questions} ({percentage}%)")
+        trivia_service.save_trivia_score(trivia_session)
+
+        session.pop('trivia_session', None)
+
+        if trivia_session['type'] == 'movie':
+            back_url = url_for('movies.movie_detail',
+                               user_id=trivia_session['user_id'],
+                               movie_id=trivia_session['movie_id'])
+        else:
+            back_url = url_for('movies.user_movies', user_id=trivia_session['user_id'])
+
+        return render_template('trivia_results.html', results=results, back_url=back_url)
 
     except Exception as e:
-        print(f"🔴 Error saving trivia score: {e}")
-
-    if percentage >= 90:
-        performance = "🏆 Movie Master!"
-    elif percentage >= 75:
-        performance = "🌟 Cinema Expert!"
-    elif percentage >= 60:
-        performance = "🎬 Movie Buff!"
-    elif percentage >= 40:
-        performance = "🍿 Getting There!"
-    else:
-        performance = "📚 Study More!"
-
-    results = {
-        'score': score,
-        'total': total_questions,
-        'percentage': percentage,
-        'performance': performance,
-        'answers': trivia_session['answers'],
-        'type': trivia_session['type']
-    }
-
-    session.pop('trivia_session', None)
-
-    if trivia_session['type'] == 'movie':
-        back_url = url_for('movies.movie_detail',
-                           user_id=trivia_session['user_id'],
-                           movie_id=trivia_session['movie_id'])
-    else:
-        back_url = url_for('movies.user_movies', user_id=trivia_session['user_id'])
-
-    return render_template('trivia_results.html', results=results, back_url=back_url)
+        flash(f'Error calculating results: {str(e)}', 'error')
+        return redirect(url_for('users.list_users'))
 
 
 @trivia_bp.route('/trivia/quit')
@@ -259,7 +208,7 @@ def trivia_quit():
 def global_leaderboard():
     """Global trivia leaderboard"""
     try:
-        leaderboard = data_manager.get_global_leaderboard(limit=20)
+        leaderboard = trivia_service.get_leaderboard('global', limit=20)
         return render_template('leaderboard.html',
                                leaderboard=leaderboard,
                                leaderboard_type='global',
@@ -273,7 +222,7 @@ def global_leaderboard():
 def collection_leaderboard():
     """Collection trivia leaderboard"""
     try:
-        leaderboard = data_manager.get_collection_leaderboard(limit=20)
+        leaderboard = trivia_service.get_leaderboard('collection', limit=20)
         return render_template('leaderboard.html',
                                leaderboard=leaderboard,
                                leaderboard_type='collection',
@@ -287,20 +236,26 @@ def collection_leaderboard():
 def movie_leaderboard(user_id, movie_id):
     """Movie-specific leaderboard"""
     try:
-        movies = data_manager.get_user_movies(user_id)
-        movie = next((m for m in movies if m['id'] == movie_id), None)
+        trivia_service.validate_user(user_id)
+        movie = trivia_service.validate_movie(user_id, movie_id)
 
-        if not movie:
-            flash('Movie not found', 'error')
-            return redirect(url_for('users.list_users'))
+        leaderboard = trivia_service.get_leaderboard('movie', movie_id=movie_id, limit=15)
 
-        leaderboard = data_manager.get_movie_leaderboard(movie_id, limit=15)
         return render_template('leaderboard.html',
                                leaderboard=leaderboard,
                                leaderboard_type='movie',
                                title=f'🎬 "{movie["title"]}" Trivia Leaderboard',
                                movie=movie,
                                back_url=url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    except UserNotFoundError:
+        flash('User not found', 'error')
+        return redirect(url_for('users.list_users'))
+
+    except MovieNotFoundError:
+        flash('Movie not found', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
     except Exception as e:
         flash(f'Error loading movie leaderboard: {str(e)}', 'error')
         return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
@@ -310,17 +265,16 @@ def movie_leaderboard(user_id, movie_id):
 def user_trivia_stats(user_id):
     """User's personal trivia statistics"""
     try:
-        users = data_manager.get_all_users()
-        user = next((u for u in users if u['id'] == user_id), None)
+        user_stats = trivia_service.get_user_stats(user_id)
 
-        if not user:
-            flash('User not found', 'error')
-            return redirect(url_for('users.list_users'))
-
-        stats = data_manager.get_user_trivia_stats(user_id)
         return render_template('user_trivia_stats.html',
-                               user=user,
-                               stats=stats)
+                               user=user_stats['user'],
+                               stats=user_stats['stats'])
+
+    except UserNotFoundError:
+        flash('User not found', 'error')
+        return redirect(url_for('users.list_users'))
+
     except Exception as e:
         flash(f'Error loading trivia stats: {str(e)}', 'error')
         return redirect(url_for('movies.user_movies', user_id=user_id))
