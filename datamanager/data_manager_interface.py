@@ -62,3 +62,28 @@ class DataManagerInterface(ABC):
     def like_review(self, review_id):
         """Increment likes for a review"""
         pass
+
+    @abstractmethod
+    def save_trivia_score(self, score_data):
+        """Save a trivia score to the database"""
+        pass
+
+    @abstractmethod
+    def get_global_leaderboard(self, limit=10):
+        """Get global trivia leaderboard (all users, all attempts)"""
+        pass
+
+    @abstractmethod
+    def get_movie_leaderboard(self, movie_id, limit=10):
+        """Get leaderboard for specific movie"""
+        pass
+
+    @abstractmethod
+    def get_collection_leaderboard(self, limit=10):
+        """Get leaderboard for collection trivia"""
+        pass
+
+    @abstractmethod
+    def get_user_trivia_stats(self, user_id):
+        """Get trivia statistics for a specific user"""
+        pass

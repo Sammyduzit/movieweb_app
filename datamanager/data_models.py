@@ -9,6 +9,7 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
 
+    trivia_scores = db.relationship('TriviaScore', back_populates= 'user', lazy=True)
     movies = db.relationship('Movie', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self):
@@ -34,9 +35,10 @@ class Movie(db.Model):
     rating = db.Column(db.Float, nullable=True)
     genre = db.Column(db.String(100), nullable=True)
     poster = db.Column(db.String(500), nullable=True)
-    reviews = db.relationship('Review', backref='movie', lazy=True, cascade='all, delete-orphan')
-
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    trivia_scores = db.relationship('TriviaScore', back_populates='movie', lazy=True)
+    reviews = db.relationship('Review', backref='movie', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self):
         """Convert movie object to dictionary"""
@@ -83,3 +85,37 @@ class Review(db.Model):
     def __repr__(self):
         return f'<Review {self.id} for Movie {self.movie_id}>'
 
+
+class TriviaScore(db.Model):
+    """Model for tracking trivia scores and leaderboards"""
+    __tablename__ = 'trivia_scores'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    trivia_type = db.Column(db.String(20), nullable=False)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=True)
+    score = db.Column(db.Integer, nullable=False)
+    total_questions = db.Column(db.Integer, nullable=False)
+    percentage = db.Column(db.Integer, nullable=False)
+    completion_time = db.Column(db.Integer, nullable=True)  # Time in seconds
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', back_populates='trivia_scores')
+    movie = db.relationship('Movie', back_populates='trivia_scores')
+
+    def to_dict(self):
+        """Convert trivia score to dictionary"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'trivia_type': self.trivia_type,
+            'movie_id': self.movie_id,
+            'score': self.score,
+            'total_questions': self.total_questions,
+            'percentage': self.percentage,
+            'completion_time': self.completion_time,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+    def __repr__(self):
+        return f'<TriviaScore {self.user_id}: {self.score}/{self.total_questions} ({self.percentage}%)>'

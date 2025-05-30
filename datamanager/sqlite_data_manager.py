@@ -215,3 +215,113 @@ class SQLiteDataManager(DataManagerInterface):
         db.session.delete(review)
         db.session.commit()
         return True
+
+    def save_trivia_score(self, score_data):
+        """Save a trivia score to the database"""
+        from .data_models import TriviaScore
+
+        new_score = TriviaScore(
+            user_id=score_data['user_id'],
+            trivia_type=score_data['trivia_type'],
+            movie_id=score_data.get('movie_id'),
+            score=score_data['score'],
+            total_questions=score_data['total_questions'],
+            percentage=score_data['percentage'],
+            completion_time=score_data.get('completion_time')
+        )
+
+        db.session.add(new_score)
+        db.session.commit()
+        return new_score.to_dict()
+
+    def get_global_leaderboard(self, limit=10):
+        """Get global trivia leaderboard (best scores across all trivia)"""
+        from .data_models import TriviaScore, User
+
+        # Get best scores with user info
+        scores = db.session.query(TriviaScore, User).join(User).order_by(
+            TriviaScore.percentage.desc(),
+            TriviaScore.score.desc(),
+            TriviaScore.created_at.asc()
+        ).limit(limit).all()
+
+        leaderboard = []
+        for score, user in scores:
+            entry = score.to_dict()
+            entry['user_name'] = user.name
+            leaderboard.append(entry)
+
+        return leaderboard
+
+    def get_movie_leaderboard(self, movie_id, limit=10):
+        """Get leaderboard for specific movie"""
+        from .data_models import TriviaScore, User
+
+        scores = db.session.query(TriviaScore, User).join(User).filter(
+            TriviaScore.movie_id == movie_id,
+            TriviaScore.trivia_type == 'movie'
+        ).order_by(
+            TriviaScore.percentage.desc(),
+            TriviaScore.score.desc(),
+            TriviaScore.created_at.asc()
+        ).limit(limit).all()
+
+        leaderboard = []
+        for score, user in scores:
+            entry = score.to_dict()
+            entry['user_name'] = user.name
+            leaderboard.append(entry)
+
+        return leaderboard
+
+    def get_collection_leaderboard(self, limit=10):
+        """Get leaderboard for collection trivia"""
+        from .data_models import TriviaScore, User
+
+        scores = db.session.query(TriviaScore, User).join(User).filter(
+            TriviaScore.trivia_type == 'collection'
+        ).order_by(
+            TriviaScore.percentage.desc(),
+            TriviaScore.score.desc(),
+            TriviaScore.created_at.asc()
+        ).limit(limit).all()
+
+        leaderboard = []
+        for score, user in scores:
+            entry = score.to_dict()
+            entry['user_name'] = user.name
+            leaderboard.append(entry)
+
+        return leaderboard
+
+    def get_user_trivia_stats(self, user_id):
+        """Get trivia statistics for a specific user"""
+        from .data_models import TriviaScore
+
+        stats = db.session.query(TriviaScore).filter(
+            TriviaScore.user_id == user_id
+        ).all()
+
+        if not stats:
+            return {
+                'total_attempts': 0,
+                'best_score': 0,
+                'average_score': 0,
+                'movie_attempts': 0,
+                'collection_attempts': 0
+            }
+
+        total_attempts = len(stats)
+        movie_attempts = len([s for s in stats if s.trivia_type == 'movie'])
+        collection_attempts = len([s for s in stats if s.trivia_type == 'collection'])
+        best_score = max(s.percentage for s in stats)
+        average_score = round(sum(s.percentage for s in stats) / total_attempts)
+
+        return {
+            'total_attempts': total_attempts,
+            'best_score': best_score,
+            'average_score': average_score,
+            'movie_attempts': movie_attempts,
+            'collection_attempts': collection_attempts,
+            'recent_scores': [s.to_dict() for s in sorted(stats, key=lambda x: x.created_at, reverse=True)[:5]]
+        }
