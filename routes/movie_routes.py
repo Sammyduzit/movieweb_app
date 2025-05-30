@@ -4,7 +4,7 @@ from services.review_service import ReviewService
 from services.user_service import UserService
 from exceptions import (
     UserNotFoundError, MovieNotFoundError, ValidationError,
-    DatabaseError, ExternalAPIError
+    DatabaseError, ExternalAPIError, DuplicateMovieError
 )
 
 movie_bp = Blueprint('movies', __name__, url_prefix='/users/<int:user_id>')
@@ -87,6 +87,10 @@ def add_movie(user_id):
                 flash(f'Validation error: {e.message}', 'error')
                 return render_template('add_movie.html', user=user)
 
+            except DuplicateMovieError as e:
+                flash(e.message, 'warning')
+                return render_template('add_movie.html', user=user)
+
             except ExternalAPIError as e:
                 flash(f'Movie added, but API enhancement failed: {e.message}', 'warning')
                 return redirect(url_for('movies.user_movies', user_id=user_id))
@@ -129,6 +133,10 @@ def update_movie(user_id, movie_id):
 
             except ValidationError as e:
                 flash(f'Validation error: {e.message}', 'error')
+                return render_template('update_movie.html', user=user, movie=movie)
+
+            except DuplicateMovieError as e:
+                flash(e.message, 'warning')
                 return render_template('update_movie.html', user=user, movie=movie)
 
         return render_template('update_movie.html', user=user, movie=movie)
