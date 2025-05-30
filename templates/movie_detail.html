@@ -30,6 +30,8 @@
                 <div class="movie-actions">
                     <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}"
                        class="btn btn-primary">🧠 Movie Trivia (7 Questions)</a>
+                    <a href="{{ url_for('trivia.movie_leaderboard', user_id=user.id, movie_id=movie.id) }}"
+                       class="btn btn-secondary">🏆 Movie Leaderboard</a>
                     <a href="/users/{{ user.id }}/update_movie/{{ movie.id }}" class="btn btn-warning">Edit Movie</a>
                     <a href="/users/{{ user.id }}/delete_movie/{{ movie.id }}"
                        class="btn btn-danger"

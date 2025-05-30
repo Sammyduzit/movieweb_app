@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }}'s Trivia Stats - MovieWeb App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="stats-header">
+        <h1>📊 {{ user.name }}'s Trivia Statistics</h1>
+    </div>
+    
+    {% if stats.total_attempts > 0 %}
+        <!-- Stats Overview -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_attempts }}</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.best_score }}%</div>
+                <div class="stat-label">Best Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.average_score }}%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.movie_attempts }}</div>
+                <div class="stat-label">Movie Trivia</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.collection_attempts }}</div>
+                <div class="stat-label">Collection Trivia</div>
+            </div>
+        </div>
+        
+        <!-- Recent Scores -->
+        <div class="recent-scores">
+            <h2>🎯 Recent Attempts</h2>
+            {% for score in stats.recent_scores %}
+                <div class="score-entry">
+                    <div class="score-type">
+                        {% if score.trivia_type == 'movie' %}🎬 Movie{% else %}🎯 Collection{% endif %}
+                    </div>
+                    <div class="score-result">{{ score.score }}/{{ score.total_questions }} ({{ score.percentage }}%)</div>
+                    <div class="score-date">{{ score.created_at[:10] }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-stats">
+            <div class="empty-state">
+                <div class="empty-icon">🎮</div>
+                <h3>No Trivia Attempts Yet!</h3>
+                <p>Start playing trivia to build your statistics!</p>
+                <a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="btn btn-primary">🎬 Play Trivia</a>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Actions -->
+    <div class="stats-actions">
+        <a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="btn btn-secondary">🔙 Back to Movies</a>
+        <a href="{{ url_for('trivia.global_leaderboard') }}" class="btn btn-primary">🏆 Global Leaderboard</a>
+    </div>
+</div>
+{% endblock %}
