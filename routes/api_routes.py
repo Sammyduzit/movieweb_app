@@ -4,7 +4,7 @@ from services.movie_service import MovieService
 from services.review_service import ReviewService
 from exceptions import (
     UserNotFoundError, MovieNotFoundError, ReviewNotFoundError,
-    ValidationError, DatabaseError, ExternalAPIError
+    ValidationError, DatabaseError, ExternalAPIError, DuplicateMovieError
 )
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -45,6 +45,8 @@ def handle_service_exceptions(func):
             return error_response(e.message, 400)
         except DatabaseError as e:
             return error_response(f'Database error: {e.message}', 500)
+        except DuplicateMovieError as e:
+            return error_response(e.message, 409)
         except ExternalAPIError as e:
             return error_response(f'External API error: {e.message}', 503)
         except Exception as e:
