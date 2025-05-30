@@ -1,3 +1,4 @@
+<!-- templates/users.html -->
 {% extends "base.html" %}
 
 {% block title %}Users - MovieWeb App{% endblock %}
@@ -5,20 +6,48 @@
 {% block content %}
 <div class="container">
     <h1 class="page-title">Users</h1>
-    
+
     {% if users %}
+        <p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">
+            {{ users | length }} {{ pluralize(users | length, 'user') }} registered
+        </p>
+
         <ul class="item-list">
             {% for user in users %}
                 <li class="item">
-                    <div class="item-title">{{ user.name }}</div>
-                    <div class="item-details">{{ user.email }}</div>
+                    <div class="item-title">{{ user.name | truncate_text(40) }}</div>
+                    <div class="item-details">{{ user.email | truncate_text(50) }}</div>
                     <div class="item-actions">
                         <a href="/users/{{ user.id }}" class="btn btn-primary">View Movies</a>
                         <a href="/users/{{ user.id }}/add_movie" class="btn btn-success">Add Movie</a>
+                        <a href="{{ url_for('trivia.user_trivia_stats', user_id=user.id) }}"
+                           class="btn btn-secondary">📊 Stats</a>
                     </div>
                 </li>
             {% endfor %}
         </ul>
+
+        <!-- Quick Stats -->
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎬 MovieWeb Community</h3>
+            <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #3498db;">{{ users | length }}</div>
+                    <div style="color: #7f8c8d;">{{ pluralize(users | length, 'User') }}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #27ae60;">🎯</div>
+                    <div style="color: #7f8c8d;">Trivia Ready</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;">🏆</div>
+                    <div style="color: #7f8c8d;">
+                        <a href="{{ url_for('trivia.global_leaderboard') }}"
+                           style="color: #7f8c8d; text-decoration: none;">View Leaderboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% else %}
         <div class="no-items">
             <p>No users found.</p>

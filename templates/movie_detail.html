@@ -1,3 +1,4 @@
+<!-- templates/movie_detail.html -->
 {% extends "base.html" %}
 
 {% block title %}{{ movie.title }} - MovieWeb App{% endblock %}
@@ -7,24 +8,25 @@
     <div style="text-align: center; margin-bottom: 2rem;">
         <a href="/users/{{ user.id }}" class="btn btn-secondary">← Back to {{ user.name }}'s Movies</a>
     </div>
-    
+
     <!-- Movie Details Section -->
     <div class="movie-detail-container">
         <div class="movie-detail-header">
             <div class="movie-poster-large">
-                {% if movie.poster and movie.poster != 'N/A' %}
-                    <img src="{{ movie.poster }}" alt="{{ movie.title }} poster" class="poster-image-large">
+                {% set poster = get_poster_url(movie.poster) %}
+                {% if poster %}
+                    <img src="{{ poster }}" alt="{{ movie.title }} poster" class="poster-image-large">
                 {% else %}
                     <div class="no-poster-large">No Poster</div>
                 {% endif %}
             </div>
-            
+
             <div class="movie-info-large">
-                <h1 class="movie-title">{{ movie.title }} ({{ movie.year }})</h1>
+                <h1 class="movie-title">{{ movie.title }} ({{ movie.year or 'Unknown' }})</h1>
                 <div class="movie-details">
-                    <p><strong>Director:</strong> {{ movie.director }}</p>
+                    <p><strong>Director:</strong> {{ movie.director or 'Unknown' }}</p>
                     {% if movie.genre %}<p><strong>Genre:</strong> {{ movie.genre }}</p>{% endif %}
-                    {% if movie.rating %}<p><strong>Rating:</strong> {{ movie.rating }}/10</p>{% endif %}
+                    {% if movie.rating %}<p><strong>Rating:</strong> {{ movie.rating | format_rating }}</p>{% endif %}
                 </div>
 
                 <div class="movie-actions">
@@ -40,31 +42,33 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Reviews Section -->
     <div class="reviews-section">
-        <h2>Reviews</h2>
-        
+        <h2>Reviews ({{ reviews | length }} {{ pluralize(reviews | length, 'review') }})</h2>
+
         <!-- Add Review Form -->
         <div class="add-review-form">
             <h3>Write a Review</h3>
             <form method="POST" action="/users/{{ user.id }}/movies/{{ movie.id }}/add_review">
                 <div class="form-group">
                     <label for="content" class="form-label">Your Review:</label>
-                    <textarea id="content" name="content" class="form-input" rows="4" required placeholder="Write your review here..."></textarea>
+                    <textarea id="content" name="content" class="form-input" rows="4" required
+                              placeholder="Write your review here..."></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="reviewer_rating" class="form-label">Your Rating (1-10):</label>
-                    <input type="number" id="reviewer_rating" name="reviewer_rating" class="form-input" min="1" max="10" placeholder="Optional">
+                    <input type="number" id="reviewer_rating" name="reviewer_rating"
+                           class="form-input" min="1" max="10" placeholder="Optional">
                 </div>
-                
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-success">Submit Review</button>
                 </div>
             </form>
         </div>
-        
+
         <!-- Display Reviews -->
         {% if reviews %}
             <div class="reviews-list">
@@ -72,13 +76,13 @@
                     <div class="review-item">
                         <div class="review-header">
                             {% if review.reviewer_rating %}
-                                <span class="review-rating">{{ review.reviewer_rating }}/10 ⭐</span>
+                                <span class="review-rating">{{ review.reviewer_rating | format_rating }}</span>
                             {% endif %}
-                            <span class="review-date">{{ review.created_at[:10] }}</span>
+                            <span class="review-date">{{ review.created_at | format_date('short') }}</span>
                         </div>
-                        
+
                         <div class="review-content">
-                            {{ review.content }}
+                            {{ review.content | truncate_text(500) }}
                         </div>
                         
                         <div class="review-actions">

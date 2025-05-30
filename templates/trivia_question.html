@@ -1,3 +1,4 @@
+<!-- templates/trivia_question.html -->
 {% extends "base.html" %}
 
 {% block title %}
@@ -15,25 +16,26 @@
             Question {{ progress.current }} of {{ progress.total }} ({{ progress.percentage }}%)
         </div>
     </div>
-    
+
     <!-- Question Card -->
     <div class="trivia-card">
         <div class="question-header">
-            <span class="difficulty-badge difficulty-{{ question.difficulty or 'medium' }}">
-                {{ question.difficulty or 'medium' }}
+            {% set difficulty_style = get_difficulty_style(question.difficulty or 'medium') %}
+            <span class="difficulty-badge {{ difficulty_style.class }}">
+                {{ (question.difficulty or 'medium') | title }}
             </span>
         </div>
-        
+
         <div class="question-text">
-            {{ question.question }}
+            {{ question.question | truncate_text(300) }}
         </div>
-        
+
         <!-- Answer Options -->
         <form method="POST" action="{{ url_for('trivia.trivia_answer') }}" class="trivia-form">
             {% for option in question.options %}
                 <button type="submit" name="answer" value="{{ loop.index0 }}" class="option-button">
                     <span class="option-letter">{{ 'ABCD'[loop.index0] }}</span>
-                    <span class="option-text">{{ option }}</span>
+                    <span class="option-text">{{ option | truncate_text(200) }}</span>
                 </button>
             {% endfor %}
         </form>

@@ -1,3 +1,4 @@
+<!-- templates/edit_review.html -->
 {% extends "base.html" %}
 
 {% block title %}Edit Review - {{ movie.title }} - MovieWeb App{% endblock %}
@@ -5,25 +6,49 @@
 {% block content %}
 <div class="container">
     <div style="text-align: center; margin-bottom: 2rem;">
-        <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">← Back to {{ movie.title }}</a>
+        <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">
+            ← Back to {{ movie.title | truncate_text(30) }}
+        </a>
     </div>
-    
+
     <div class="edit-review-container">
-        <h1>Edit Review for "{{ movie.title }}"</h1>
-        
+        <h1>Edit Review for "{{ movie.title | truncate_text(50) }}"</h1>
+
+        <!-- Current Review Preview -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #3498db;">
+            <h3 style="margin-bottom: 1rem; color: #2c3e50;">Current Review:</h3>
+            <div style="margin-bottom: 1rem;">
+                <strong>Content:</strong> {{ review.content | truncate_text(200) }}
+                {% if review.content | length > 200 %}
+                    <span style="color: #7f8c8d; font-style: italic;">(showing first 200 characters)</span>
+                {% endif %}
+            </div>
+            {% if review.reviewer_rating %}
+                <div style="margin-bottom: 1rem;">
+                    <strong>Rating:</strong> {{ review.reviewer_rating | format_rating }}
+                </div>
+            {% endif %}
+            <div style="color: #7f8c8d; font-size: 0.9rem;">
+                <strong>Last updated:</strong> {{ review.updated_at | format_date('datetime') or review.created_at | format_date('datetime') }}
+            </div>
+        </div>
+
         <form method="POST">
             <div class="form-group">
                 <label for="content" class="form-label">Your Review:</label>
                 <textarea id="content" name="content" class="form-input" rows="4" required>{{ review.content }}</textarea>
+                <small style="color: #7f8c8d;">
+                    Character count: <span id="char-count">{{ review.content | length }}</span>/2000
+                </small>
             </div>
-            
+
             <div class="form-group">
                 <label for="reviewer_rating" class="form-label">Your Rating (1-10):</label>
-                <input type="number" id="reviewer_rating" name="reviewer_rating" 
-                       class="form-input" min="1" max="10" 
+                <input type="number" id="reviewer_rating" name="reviewer_rating"
+                       class="form-input" min="1" max="10"
                        value="{{ review.reviewer_rating or '' }}" placeholder="Optional">
             </div>
-            
+
             <div class="form-group" style="text-align: center;">
                 <button type="submit" class="btn btn-success">Update Review</button>
                 <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">Cancel</a>
@@ -31,4 +56,25 @@
         </form>
     </div>
 </div>
+
+<script>
+// Character counter for textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('content');
+    const charCount = document.getElementById('char-count');
+
+    textarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+
+        // Change color based on length
+        if (this.value.length > 1800) {
+            charCount.style.color = '#e74c3c';
+        } else if (this.value.length > 1500) {
+            charCount.style.color = '#f39c12';
+        } else {
+            charCount.style.color = '#7f8c8d';
+        }
+    });
+});
+</script>
 {% endblock %}

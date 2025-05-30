@@ -1,10 +1,11 @@
+<!-- templates/user_movies.html -->
 {% extends "base.html" %}
 
 {% block title %}{{ user.name }}'s Movies - MovieWeb App{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="page-title">{{ user.name }}'s Favorite Movies</h1>
+    <h1 class="page-title">{{ user.name | truncate_text(30) }}'s Favorite Movies</h1>
 
     <div style="text-align: center; margin-bottom: 2rem;">
         <a href="{{ url_for('trivia.collection_trivia', user_id=user.id) }}"
@@ -14,15 +15,20 @@
         <a href="/users/{{ user.id }}/add_movie" class="btn btn-success">Add New Movie</a>
         <a href="/users" class="btn btn-secondary">Back to Users</a>
     </div>
-    
+
     {% if movies %}
+        <p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">
+            {{ movies | length }} {{ pluralize(movies | length, 'movie', 'movies') }} in collection
+        </p>
+
         <ul class="item-list">
             {% for movie in movies %}
                 <li class="item">
                     <div class="movie-content">
                         <div class="movie-poster">
-                            {% if movie.poster and movie.poster != 'N/A' %}
-                                <img src="{{ movie.poster }}" alt="{{ movie.title }} poster" class="poster-image">
+                            {% set poster = get_poster_url(movie.poster) %}
+                            {% if poster %}
+                                <img src="{{ poster }}" alt="{{ movie.title }} poster" class="poster-image">
                             {% else %}
                                 <div class="no-poster">No Poster</div>
                             {% endif %}
@@ -31,15 +37,17 @@
                         <div class="movie-info">
                             <div class="item-title">
                                 <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="movie-title-link">
-                                    {{ movie.title }} ({{ movie.year }})
+                                    {{ movie.title | truncate_text(60) }} ({{ movie.year or 'Unknown' }})
                                 </a>
                             </div>
                             <div class="item-details">
-                                <strong>Director:</strong> {{ movie.director }}<br>
-                                {% if movie.genre %}<strong>Genre:</strong> {{ movie.genre }}<br>{% endif %}
-                                {% if movie.rating %}<strong>Rating:</strong> {{ movie.rating }}/10{% endif %}
+                                <strong>Director:</strong> {{ movie.director | truncate_text(40) or 'Unknown' }}<br>
+                                {% if movie.genre %}<strong>Genre:</strong> {{ movie.genre | truncate_text(30) }}<br>{% endif %}
+                                {% if movie.rating %}<strong>Rating:</strong> {{ movie.rating | format_rating }}{% endif %}
                             </div>
                             <div class="item-actions">
+                                <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}"
+                                   class="btn btn-primary btn-small trivia-btn">🧠 Trivia</a>
                                 <a href="/users/{{ user.id }}/update_movie/{{ movie.id }}" class="btn btn-warning">Edit</a>
                                 <a href="/users/{{ user.id }}/delete_movie/{{ movie.id }}"
                                    class="btn btn-danger"
@@ -52,7 +60,7 @@
         </ul>
     {% else %}
         <div class="no-items">
-            <p>{{ user.name }} hasn't added any movies yet.</p>
+            <p>{{ user.name | truncate_text(20) }} hasn't added any movies yet.</p>
             <a href="/users/{{ user.id }}/add_movie" class="btn btn-primary">Add First Movie</a>
         </div>
     {% endif %}

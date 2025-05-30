@@ -1,3 +1,4 @@
+<!-- templates/leaderboard.html -->
 {% extends "base.html" %}
 
 {% block title %}{{ title }} - MovieWeb App{% endblock %}
@@ -7,72 +8,55 @@
     <!-- Header -->
     <div class="leaderboard-header">
         <h1 class="leaderboard-title">{{ title }}</h1>
-        
+
         <!-- Navigation Tabs -->
         <div class="leaderboard-tabs">
-            <a href="{{ url_for('trivia.global_leaderboard') }}" 
+            <a href="{{ url_for('trivia.global_leaderboard') }}"
                class="tab {% if leaderboard_type == 'global' %}active{% endif %}">
                 🏆 Global
             </a>
-            <a href="{{ url_for('trivia.collection_leaderboard') }}" 
+            <a href="{{ url_for('trivia.collection_leaderboard') }}"
                class="tab {% if leaderboard_type == 'collection' %}active{% endif %}">
                 🎯 Collection
             </a>
             {% if leaderboard_type == 'movie' and movie %}
-                <a href="#" class="tab active">🎬 {{ movie.title[:20] }}{% if movie.title|length > 20 %}...{% endif %}</a>
+                <a href="#" class="tab active">🎬 {{ movie.title | truncate_text(20) }}</a>
             {% endif %}
         </div>
     </div>
-    
+
     <!-- Leaderboard Content -->
     {% if leaderboard %}
         <div class="leaderboard-content">
             <div class="leaderboard-list">
                 {% for entry in leaderboard %}
-                    <div class="leaderboard-entry rank-{{ loop.index }}">
+                    {% set rank_info = get_rank_display(loop.index) %}
+                    <div class="leaderboard-entry {{ rank_info.class }}">
                         <!-- Rank Badge -->
-                        <div class="rank-badge">
-                            {% if loop.index == 1 %}
-                                🥇
-                            {% elif loop.index == 2 %}
-                                🥈
-                            {% elif loop.index == 3 %}
-                                🥉
-                            {% else %}
-                                {{ loop.index }}
-                            {% endif %}
-                        </div>
-                        
+                        <div class="rank-badge">{{ rank_info.emoji }}</div>
+
                         <!-- User Info -->
                         <div class="user-info">
-                            <div class="user-name">{{ entry.user_name }}</div>
+                            <div class="user-name">{{ entry.user_name | truncate_text(30) }}</div>
                             <div class="entry-details">
-                                {% if entry.trivia_type == 'movie' %}
-                                    <span class="trivia-type movie">🎬 Movie Trivia</span>
-                                {% else %}
-                                    <span class="trivia-type collection">🎯 Collection Trivia</span>
-                                {% endif %}
-                                <span class="entry-date">{{ entry.created_at[:10] }}</span>
+                                {% set trivia_info = format_trivia_type(entry.trivia_type) %}
+                                <span class="trivia-type {{ trivia_info.class }}">
+                                    {{ trivia_info.emoji }} {{ trivia_info.text }}
+                                </span>
+                                <span class="entry-date">{{ entry.created_at | format_date('short') }}</span>
                             </div>
                         </div>
-                        
+
                         <!-- Score Display -->
                         <div class="score-display">
                             <div class="score-main">{{ entry.score }}/{{ entry.total_questions }}</div>
                             <div class="score-percentage">{{ entry.percentage }}%</div>
                         </div>
-                        
+
                         <!-- Performance Badge -->
                         <div class="performance-indicator">
-                            {% if entry.percentage >= 90 %}
-                                <span class="badge master">Master</span>
-                            {% elif entry.percentage >= 75 %}
-                                <span class="badge expert">Expert</span>
-                            {% elif entry.percentage >= 60 %}
-                                <span class="badge buff">Buff</span>
-                            {% else %}
-                                <span class="badge learning">Learning</span>
-                            {% endif %}
+                            {% set performance = get_performance_badge(entry.percentage) %}
+                            <span class="badge {{ performance.class }}">{{ performance.text }}</span>
                         </div>
                     </div>
                 {% endfor %}

@@ -1,3 +1,4 @@
+<!-- templates/trivia_results.html -->
 {% extends "base.html" %}
 
 {% block title %}Trivia Results - MovieWeb App{% endblock %}
@@ -6,29 +7,31 @@
 <div class="container">
     <!-- Results Header -->
     <div class="results-header">
+        {% set trivia_info = format_trivia_type(results.type) %}
         <h1 class="results-title">
-            {% if results.type == 'movie' %}🎬 Movie Trivia{% else %}🎭 Collection Trivia{% endif %} Complete!
+            {{ trivia_info.emoji }} {{ trivia_info.text }} Complete!
         </h1>
-        
+
         <div class="score-display">
             <div class="score-circle">
                 <div class="score-number">{{ results.score }}/{{ results.total }}</div>
-                <div class="score-percentage">{{ results.percentage }}%</div>
+                <div class="score-percentage">{{ format_percentage(results.score, results.total) }}%</div>
             </div>
-            <div class="performance-badge">{{ results.performance }}</div>
+            {% set performance = get_performance_badge(format_percentage(results.score, results.total)) %}
+            <div class="performance-badge">{{ performance.emoji }} {{ performance.text }}</div>
         </div>
     </div>
-    
+
     <!-- Detailed Results -->
     <div class="results-details">
         <h2>📊 Question Review</h2>
-        
+
         {% for answer in results.answers %}
             <div class="answer-review {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
                 <div class="question-number">Q{{ loop.index }}</div>
                 <div class="question-content">
-                    <div class="question-text">{{ answer.question }}</div>
-                    
+                    <div class="question-text">{{ answer.question | truncate_text(200) }}</div>
+
                     <div class="answer-options">
                         {% for option in answer.options %}
                             <div class="option-item
@@ -36,7 +39,7 @@
                                 {% if loop.index0 == answer.user_answer and not answer.is_correct %}wrong-answer{% endif %}
                                 {% if loop.index0 == answer.user_answer and answer.is_correct %}user-correct{% endif %}">
                                 <span class="option-letter">{{ 'ABCD'[loop.index0] }}</span>
-                                <span class="option-text">{{ option }}</span>
+                                <span class="option-text">{{ option | truncate_text(150) }}</span>
                                 {% if loop.index0 == answer.correct_answer %}✅{% endif %}
                                 {% if loop.index0 == answer.user_answer and not answer.is_correct %}❌{% endif %}
                             </div>

@@ -1,3 +1,4 @@
+<!-- templates/user_trivia_stats.html -->
 {% extends "base.html" %}
 
 {% block title %}{{ user.name }}'s Trivia Stats - MovieWeb App{% endblock %}
@@ -6,15 +7,15 @@
 <div class="container">
     <!-- Header -->
     <div class="stats-header">
-        <h1>📊 {{ user.name }}'s Trivia Statistics</h1>
+        <h1>📊 {{ user.name | truncate_text(25) }}'s Trivia Statistics</h1>
     </div>
-    
+
     {% if stats.total_attempts > 0 %}
         <!-- Stats Overview -->
         <div class="stats-overview">
             <div class="stat-card">
                 <div class="stat-number">{{ stats.total_attempts }}</div>
-                <div class="stat-label">Total Attempts</div>
+                <div class="stat-label">Total {{ pluralize(stats.total_attempts, 'Attempt') }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">{{ stats.best_score }}%</div>
@@ -26,24 +27,40 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number">{{ stats.movie_attempts }}</div>
-                <div class="stat-label">Movie Trivia</div>
+                <div class="stat-label">Movie {{ pluralize(stats.movie_attempts, 'Quiz', 'Quizzes') }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">{{ stats.collection_attempts }}</div>
-                <div class="stat-label">Collection Trivia</div>
+                <div class="stat-label">Collection {{ pluralize(stats.collection_attempts, 'Quiz', 'Quizzes') }}</div>
             </div>
         </div>
-        
+
+        <!-- Performance Badge -->
+        <div style="text-align: center; margin: 2rem 0;">
+            {% set performance = get_performance_badge(stats.best_score) %}
+            <div class="performance-badge">
+                {{ performance.emoji }} {{ performance.text }}
+            </div>
+            <p style="color: #7f8c8d; margin-top: 0.5rem;">Your highest achievement level</p>
+        </div>
+
         <!-- Recent Scores -->
         <div class="recent-scores">
             <h2>🎯 Recent Attempts</h2>
             {% for score in stats.recent_scores %}
                 <div class="score-entry">
                     <div class="score-type">
-                        {% if score.trivia_type == 'movie' %}🎬 Movie{% else %}🎯 Collection{% endif %}
+                        {% set trivia_info = format_trivia_type(score.trivia_type) %}
+                        {{ trivia_info.emoji }} {{ trivia_info.text }}
                     </div>
-                    <div class="score-result">{{ score.score }}/{{ score.total_questions }} ({{ score.percentage }}%)</div>
-                    <div class="score-date">{{ score.created_at[:10] }}</div>
+                    <div class="score-result">
+                        {{ score.score }}/{{ score.total_questions }} ({{ score.percentage }}%)
+                        {% set perf = get_performance_badge(score.percentage) %}
+                        <span class="badge {{ perf.class }}" style="margin-left: 0.5rem; font-size: 0.8rem;">
+                            {{ perf.text }}
+                        </span>
+                    </div>
+                    <div class="score-date">{{ score.created_at | format_date('short') }}</div>
                 </div>
             {% endfor %}
         </div>
@@ -57,11 +74,12 @@
             </div>
         </div>
     {% endif %}
-    
+
     <!-- Actions -->
     <div class="stats-actions">
         <a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="btn btn-secondary">🔙 Back to Movies</a>
         <a href="{{ url_for('trivia.global_leaderboard') }}" class="btn btn-primary">🏆 Global Leaderboard</a>
+        <a href="{{ url_for('trivia.collection_leaderboard') }}" class="btn btn-warning">🎯 Collection Leaderboard</a>
     </div>
 </div>
 {% endblock %}
