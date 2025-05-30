@@ -1,3 +1,4 @@
+from config import DatabaseConfig, AppConfig
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from flask import Flask, redirect, url_for, render_template
 from datamanager import init_database, User, Movie, SQLiteDataManager
@@ -11,13 +12,13 @@ def create_app():
     app = Flask(__name__)
 
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    data_dir = os.path.join(base_dir, 'instance')
+    data_dir = os.path.join(base_dir, DatabaseConfig.INSTANCE_FOLDER)
     os.makedirs(data_dir, exist_ok=True)
-    db_path = os.path.join(data_dir, "moviewebapp.sqlite")
+    db_path = os.path.join(data_dir, DatabaseConfig.DB_FILENAME)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = 'your-secret-key-here'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = DatabaseConfig.TRACK_MODIFICATIONS
+    app.config['SECRET_KEY'] = AppConfig.SECRET_KEY
 
     init_database(app)
 
@@ -82,7 +83,7 @@ def main():
     print("- http://127.0.0.1:5002/users (List all users)")
     print("- http://127.0.0.1:5002/add_user (Add new user)")
     print("- OMDb API integration enabled (set OMDB_API_KEY environment variable)")
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    app.run(host=AppConfig.HOST, port=AppConfig.PORT, debug=AppConfig.DEBUG)
 
 
 if __name__ == "__main__":

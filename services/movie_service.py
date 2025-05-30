@@ -1,6 +1,7 @@
 """
 Movie Service - Business logic for movie operations.
 """
+from config import ValidationConfig
 from datamanager import SQLiteDataManager
 from services.omdb_service import OMDbService
 from exceptions import (
@@ -29,13 +30,13 @@ class MovieService:
         if not title:
             raise ValidationError('title', 'Movie title is required')
 
-        if len(title) > 200:
+        if len(title) > ValidationConfig.MOVIE_TITLE_MAX:
             raise ValidationError('title', 'Title must be less than 200 characters')
 
         if year:
             try:
                 year = int(year)
-                if year < 1800 or year > 2050:
+                if year < ValidationConfig.YEAR_MIN or year > ValidationConfig.YEAR_MAX:
                     raise ValidationError('year', 'Year must be between 1800 and 2050')
             except (ValueError, TypeError):
                 raise ValidationError('year', 'Year must be a valid number')
@@ -45,17 +46,17 @@ class MovieService:
         if rating:
             try:
                 rating = float(rating)
-                if not (1 <= rating <= 10):
+                if not (ValidationConfig.RATING_MIN <= rating <= ValidationConfig.RATING_MAX):
                     raise ValidationError('rating', 'Rating must be between 1 and 10')
             except (ValueError, TypeError):
                 raise ValidationError('rating', 'Rating must be a valid number')
         else:
             rating = None
 
-        if director and len(director) > 100:
+        if director and len(director) > ValidationConfig.DIRECTOR_NAME_MAX:
             raise ValidationError('director', 'Director name must be less than 100 characters')
 
-        if genre and len(genre) > 100:
+        if genre and len(genre) > ValidationConfig.GENRE_MAX:
             raise ValidationError('genre', 'Genre must be less than 100 characters')
 
         return {

@@ -1,3 +1,4 @@
+from config import APIConfig
 import requests
 import os
 
@@ -13,7 +14,7 @@ class OMDbService:
         :param api_key: OMDb API key
         """
         self.api_key = api_key or os.getenv('OMDB_API_KEY')
-        self.base_url = "http://www.omdbapi.com/"
+        self.base_url = APIConfig.OMDB_BASE_URL
 
 
     def search_movie(self, title, year=None):
@@ -39,7 +40,7 @@ class OMDbService:
             if year:
                 params['y'] = year
 
-            response = requests.get(self.base_url, params=params, timeout=5)
+            response = requests.get(self.base_url, params=params, timeout=APIConfig.OMDB_TIMEOUT)
             response.raise_for_status()
 
             data = response.json()

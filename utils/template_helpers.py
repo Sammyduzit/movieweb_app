@@ -2,7 +2,7 @@
 Template helper functions and filters for MovieWeb application.
 Provides reusable functions for common template operations.
 """
-
+from config import TriviaConfig
 from datetime import datetime
 from flask import current_app
 
@@ -16,13 +16,13 @@ def format_percentage(score, total):
 
 def get_performance_badge(percentage):
     """Get performance badge text and emoji based on percentage"""
-    if percentage >= 90:
+    if percentage >= TriviaConfig.MASTER_THRESHOLD:
         return {"text": "Movie Master", "emoji": "🏆", "class": "master"}
-    elif percentage >= 75:
+    elif percentage >= TriviaConfig.EXPERT_THRESHOLD:
         return {"text": "Cinema Expert", "emoji": "🌟", "class": "expert"}
-    elif percentage >= 60:
+    elif percentage >= TriviaConfig.BUFF_THRESHOLD:
         return {"text": "Movie Buff", "emoji": "🎬", "class": "buff"}
-    elif percentage >= 40:
+    elif percentage >= TriviaConfig.LEARNING_THRESHOLD:
         return {"text": "Getting There", "emoji": "🍿", "class": "learning"}
     else:
         return {"text": "Study More", "emoji": "📚", "class": "learning"}

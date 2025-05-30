@@ -1,3 +1,4 @@
+from config import LeaderboardConfig
 from .data_manager_interface import DataManagerInterface
 from .data_models import User, Movie
 from .database import db
@@ -323,5 +324,5 @@ class SQLiteDataManager(DataManagerInterface):
             'average_score': average_score,
             'movie_attempts': movie_attempts,
             'collection_attempts': collection_attempts,
-            'recent_scores': [s.to_dict() for s in sorted(stats, key=lambda x: x.created_at, reverse=True)[:5]]
+            'recent_scores': [s.to_dict() for s in sorted(stats, key=lambda x: x.created_at, reverse=True)[:LeaderboardConfig.USER_STATS_RECENT_LIMIT]]
         }

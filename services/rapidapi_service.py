@@ -1,3 +1,4 @@
+from config import TriviaConfig, APIConfig
 import requests
 import json
 import os
@@ -15,7 +16,7 @@ class RapidAPIService:
 
     def generate_movie_trivia(self, movie_data):
         """Generate 7 trivia questions for a specific movie"""
-        query = f"""Generate exactly 7 trivia questions about the movie 
+        query = f"""Generate exactly {TriviaConfig.MOVIE_QUESTIONS} trivia questions about the movie 
         "{movie_data['title']} ({movie_data.get('year', 'Unknown')})". 
         Movie details: Director: {movie_data.get('director', 'Unknown')}, 
         Genre: {movie_data.get('genre', 'Unknown')}
@@ -49,7 +50,7 @@ class RapidAPIService:
         movies_text = ", ".join(movie_list)
 
         query = f"""
-        Generate exactly 21 trivia questions about these movies:
+        Generate exactly {TriviaConfig.COLLECTION_QUESTIONS} trivia questions about these movies:
         {movies_text}
 
         Format your response as valid JSON with this exact structure:
@@ -86,7 +87,7 @@ class RapidAPIService:
 
         try:
             print("🤖 Generating trivia questions...")
-            response = requests.post(self.base_url, json=payload, headers=headers, timeout=30)
+            response = requests.post(self.base_url, json=payload, headers=headers, timeout=APIConfig.RAPIDAPI_TIMEOUT)
             response.raise_for_status()
 
             data = response.json()
@@ -126,26 +127,3 @@ class RapidAPIService:
         test_query = "Say 'Hello, trivia game!' in JSON format: {\"message\": \"Hello, trivia game!\"}"
         result = self._make_api_call(test_query)
         return result is not None
-
-
-# service = RapidAPIService()
-# movie_data = {
-#     "title": "The Matrix",
-#     "year": 1999
-# }
-# test = service.generate_movie_trivia(movie_data)
-#
-# print(test)
-# print(type(test))
-
-# url = "https://chatgpt-ai-chat-bot.p.rapidapi.com/ask"
-# payload = {"query": "What is google?"}
-# headers = {
-#     "x-rapidapi-key": os.getenv('RAPIDAPI_KEY'),
-#     "x-rapidapi-host": "chatgpt-ai-chat-bot.p.rapidapi.com",
-#     "Content-Type": "application/json"
-# }
-#
-# response = requests.post(url, json=payload, headers=headers)
-# print(f"Status: {response.status_code}")
-# print(response.json())

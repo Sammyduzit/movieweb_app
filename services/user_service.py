@@ -1,7 +1,7 @@
 """
 User Service - Business logic for user operations.
 """
-
+from config import ValidationConfig
 from datamanager import SQLiteDataManager
 from exceptions import UserNotFoundError, ValidationError, DatabaseError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -32,7 +32,7 @@ class UserService:
         if not email:
             raise ValidationError('email', 'Email is required')
 
-        if len(name) > 100:
+        if len(name) > ValidationConfig.USER_NAME_MAX:
             raise ValidationError('name', 'Name must be less than 100 characters')
 
         email = self.validate_email(email)

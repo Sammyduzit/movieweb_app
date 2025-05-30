@@ -1,3 +1,4 @@
+from config import TriviaConfig
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from services.trivia_service import TriviaService
 from exceptions import (
@@ -78,7 +79,7 @@ def collection_trivia(user_id):
         return redirect(url_for('users.list_users'))
 
     except InsufficientMoviesError as e:
-        flash(f'You need at least {e.required_count} movies for collection trivia! You have {e.movie_count}.', 'error')
+        flash(f'You need at least {TriviaConfig.MIN_MOVIES_FOR_COLLECTION} movies for collection trivia! You have {e.movie_count}.', 'error')
         return redirect(url_for('movies.user_movies', user_id=user_id))
 
     except TriviaError as e:

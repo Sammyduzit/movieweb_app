@@ -2,7 +2,7 @@
 Trivia Service - Business logic for trivia operations.
 Handles trivia generation, scoring, and leaderboard operations.
 """
-
+from config import TriviaConfig, LeaderboardConfig
 from datamanager import SQLiteDataManager
 from services.rapidapi_service import RapidAPIService
 from exceptions import (
@@ -14,10 +14,6 @@ from utils.template_helpers import format_percentage, get_performance_badge
 
 class TriviaService:
     """Service class for handling trivia-related business logic"""
-
-    MOVIE_QUESTIONS = 7
-    COLLECTION_QUESTIONS = 21
-    MIN_MOVIES_FOR_COLLECTION = 3
 
     def __init__(self):
         self.data_manager = SQLiteDataManager()
@@ -42,8 +38,8 @@ class TriviaService:
     def validate_collection_trivia_requirements(self, user_id):
         """Validate user has enough movies for collection trivia"""
         movies = self.data_manager.get_user_movies(user_id)
-        if len(movies) < self.MIN_MOVIES_FOR_COLLECTION:
-            raise InsufficientMoviesError(user_id, len(movies), self.MIN_MOVIES_FOR_COLLECTION)
+        if len(movies) < TriviaConfig.MIN_MOVIES_FOR_COLLECTION:
+            raise InsufficientMoviesError(user_id, len(movies), TriviaConfig.MIN_MOVIES_FOR_COLLECTION)
         return movies
 
     def generate_movie_trivia(self, user_id, movie_id):
@@ -57,7 +53,7 @@ class TriviaService:
             if not trivia_data or not trivia_data.get('questions'):
                 raise TriviaError("Failed to generate movie trivia questions", "movie")
 
-            questions = trivia_data['questions'][:self.MOVIE_QUESTIONS]
+            questions = trivia_data['questions'][:TriviaConfig.MOVIE_QUESTIONS]
 
             return {
                 'type': 'movie',
@@ -84,7 +80,7 @@ class TriviaService:
             if not trivia_data or not trivia_data.get('questions'):
                 raise TriviaError("Failed to generate collection trivia questions", "collection")
 
-            questions = trivia_data['questions'][:self.COLLECTION_QUESTIONS]
+            questions = trivia_data['questions'][:TriviaConfig.COLLECTION_QUESTIONS]
 
             return {
                 'type': 'collection',
@@ -168,16 +164,16 @@ class TriviaService:
         """Get leaderboard data based on type"""
         try:
             if leaderboard_type == 'global':
-                limit = kwargs.get('limit', 20)
+                limit = kwargs.get('limit', LeaderboardConfig.GLOBAL_LIMIT)
                 return self.data_manager.get_global_leaderboard(limit)
 
             elif leaderboard_type == 'collection':
-                limit = kwargs.get('limit', 20)
+                limit = kwargs.get('limit', LeaderboardConfig.COLLECTION_LIMIT)
                 return self.data_manager.get_collection_leaderboard(limit)
 
             elif leaderboard_type == 'movie':
                 movie_id = kwargs.get('movie_id')
-                limit = kwargs.get('limit', 15)
+                limit = kwargs.get('limit', LeaderboardConfig.MOVIE_LIMIT)
                 if not movie_id:
                     raise ValueError("movie_id required for movie leaderboard")
                 return self.data_manager.get_movie_leaderboard(movie_id, limit)

@@ -74,7 +74,12 @@ def api_create_user():
     if not data:
         return error_response('No JSON data provided')
 
-    new_user = user_service.create_user(data)
+    clean_data = {
+        'name': str(data.get('name', '')).strip(),
+        'email': str(data.get('email', '')).strip()
+    }
+
+    new_user = user_service.create_user(clean_data)
     return success_response(new_user, 'User created successfully'), 201
 
 
@@ -110,10 +115,10 @@ def api_create_movie(user_id):
     user_service.get_user_by_id(user_id)
 
     clean_data = {
-        'title': data.get('title', ''),
-        'director': data.get('director', ''),
+        'title': str(data.get('title', '')).strip(),
+        'director': str(data.get('director', '')).strip(),
         'year': data.get('year'),
-        'genre': data.get('genre', ''),
+        'genre': str(data.get('genre', '')).strip(),
         'rating': data.get('rating')
     }
 
@@ -146,16 +151,21 @@ def api_update_movie(movie_id):
         return error_response('No JSON data provided')
 
     clean_data = {}
+
     if 'title' in data:
-        clean_data['title'] = data['title'] or ''
+        clean_data['title'] = str(data['title']).strip() if data['title'] is not None else ''
+
     if 'director' in data:
-        clean_data['director'] = data['director'] or ''
+        clean_data['director'] = str(data['director']).strip() if data['director'] is not None else ''
+
     if 'year' in data:
-        clean_data['year'] = data['year']
+        clean_data['year'] = str(data['year']).strip() if data['year'] is not None else ''
+
     if 'genre' in data:
-        clean_data['genre'] = data['genre'] or ''
+        clean_data['genre'] = str(data['genre']).strip() if data['genre'] is not None else ''
+
     if 'rating' in data:
-        clean_data['rating'] = data['rating']
+        clean_data['rating'] = str(data['rating']).strip() if data['rating'] is not None else ''
 
     result = movie_service.update_movie(movie_id, clean_data)
     return success_response(result, 'Movie updated successfully')
@@ -199,7 +209,16 @@ def api_update_review(review_id):
     if not data:
         return error_response('No JSON data provided')
 
-    result = review_service.update_review(review_id, data)
+    clean_data = {}
+
+    if 'content' in data:
+        clean_data['content'] = str(data['content']).strip() if data['content'] is not None else ''
+
+    if 'reviewer_rating' in data:
+        clean_data['reviewer_rating'] = str(data['reviewer_rating']).strip() \
+            if data['reviewer_rating'] is not None else ''
+
+    result = review_service.update_review(review_id, clean_data)
     return success_response(result, 'Review updated successfully')
 
 

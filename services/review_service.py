@@ -1,7 +1,7 @@
 """
 Review Service - Business logic for review operations.
 """
-
+from config import ValidationConfig
 from datamanager import SQLiteDataManager
 from exceptions import (
     MovieNotFoundError, ReviewNotFoundError, ValidationError,
@@ -24,13 +24,13 @@ class ReviewService:
         if not content:
             raise ValidationError('content', 'Review content is required')
 
-        if len(content) > 2000:
+        if len(content) > ValidationConfig.REVIEW_CONTENT_MAX:
             raise ValidationError('content', 'Review must be less than 2000 characters')
 
         if reviewer_rating:
             try:
                 reviewer_rating = int(reviewer_rating)
-                if not (1 <= reviewer_rating <= 10):
+                if not (ValidationConfig.RATING_MIN <= reviewer_rating <= ValidationConfig.RATING_MAX):
                     raise ValidationError('reviewer_rating', 'Rating must be between 1 and 10')
             except (ValueError, TypeError):
                 raise ValidationError('reviewer_rating', 'Rating must be a valid integer')
