@@ -67,3 +67,17 @@ class DatabaseError(MovieWebError):
         super().__init__(message, status_code=500)
         self.operation = operation
         self.original_error = original_error
+
+class DuplicateMovieError(MovieWebError):
+    """Raised when user tries to add a movie they already have"""
+    def __init__(self, user_id, title, year=None):
+        if year:
+            display_title = f"{title} ({year})"
+            message = f"You already have \"{display_title}\" in your collection!"
+        else:
+            message = f"You already have \"{title}\" in your collection!"
+        super().__init__(message, status_code=409)
+        self.user_id = user_id
+        self.title = title
+        self.year = year
+        self.display_title = display_title if year else title
