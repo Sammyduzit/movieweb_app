@@ -1,6 +1,6 @@
 from config import DatabaseConfig, AppConfig
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from flask import Flask, redirect, url_for, render_template
+from flask import Flask, redirect, url_for, render_template, request
 from datamanager import init_database, User, Movie, SQLiteDataManager
 from routes import user_bp, movie_bp, review_bp, api_bp, trivia_bp
 from utils.template_helpers import register_template_helpers
@@ -35,19 +35,59 @@ def create_app():
         """Redirect to users page"""
         return redirect(url_for('users.list_users'))
 
+    @app.errorhandler(400)
+    def bad_request(error):
+        """Handle 400 Bad Request errors"""
+        return render_template('error.html',
+                               error_code=400,
+                               error_message="Bad request - invalid input provided",
+                               back_url=request.referrer or url_for('users.list_users'),
+                               home_url=url_for('users.list_users')), 400
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        """Handle 403 Forbidden errors"""
+        return render_template('error.html',
+                               error_code=403,
+                               error_message="Access forbidden - you don't have permission",
+                               back_url=request.referrer or url_for('users.list_users'),
+                               home_url=url_for('users.list_users')), 403
+
     @app.errorhandler(404)
     def not_found(error):
         """Handle 404 errors"""
         return render_template('error.html',
                                error_code=404,
-                               error_message="Page not found"), 404
+                               error_message="Page not found",
+                               back_url=request.referrer or url_for('users.list_users'),
+                               home_url=url_for('users.list_users')), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        """Handle 405 Method Not Allowed errors"""
+        return render_template('error.html',
+                               error_code=405,
+                               error_message="Method not allowed for this endpoint",
+                               back_url=request.referrer or url_for('users.list_users'),
+                               home_url=url_for('users.list_users')), 405
 
     @app.errorhandler(500)
     def internal_error(error):
         """Handle 500 errors"""
         return render_template('error.html',
                                error_code=500,
-                               error_message="Internal server error"), 500
+                               error_message="Internal server error - something went wrong",
+                               back_url=request.referrer or url_for('users.list_users'),
+                               home_url=url_for('users.list_users')), 500
+
+    @app.errorhandler(503)
+    def service_unavailable(error):
+        """Handle 503 Service Unavailable errors"""
+        return render_template('error.html',
+                               error_code=503,
+                               error_message="Service temporarily unavailable - please try again later",
+                               back_url=request.referrer or url_for('users.list_users'),
+                               home_url=url_for('users.list_users')), 503
 
     return app
 

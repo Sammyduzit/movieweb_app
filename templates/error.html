@@ -1,3 +1,4 @@
+<!-- templates/error.html -->
 {% extends "base.html" %}
 
 {% block title %}Error {{ error_code }} - MovieWeb App{% endblock %}
@@ -5,27 +6,117 @@
 {% block content %}
 <div class="container">
     <div style="text-align: center; padding: 3rem;">
-        <h1 class="page-title" style="color: #e74c3c; font-size: 4rem;">{{ error_code }}</h1>
-        
-        <div style="margin: 2rem 0;">
-            <h2 style="color: #2c3e50; margin-bottom: 1rem;">Oops! Something went wrong</h2>
-            <p style="color: #7f8c8d; font-size: 1.2rem;">{{ error_message }}</p>
-        </div>
-        
-        <div style="margin: 2rem 0;">
+        <h1 class="page-title" style="color: #e74c3c; font-size: 4rem; margin-bottom: 1rem;">
+            {{ error_code }}
+        </h1>
+
+        <div style="font-size: 4rem; margin-bottom: 2rem;">
             {% if error_code == 404 %}
-                <p>The page you're looking for doesn't exist.</p>
+                🔍
+            {% elif error_code == 403 %}
+                🚫
             {% elif error_code == 500 %}
-                <p>We're experiencing some technical difficulties. Please try again later.</p>
-            {% elif error_code == 400 %}
-                <p>The request was invalid. Please check your input and try again.</p>
+                ⚠️
+            {% elif error_code == 503 %}
+                🔧
+            {% else %}
+                ❌
             {% endif %}
         </div>
-        
-        <div class="item-actions" style="justify-content: center;">
-            <a href="/users" class="btn btn-primary">Go to Users</a>
-            <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+
+        <div style="margin: 2rem 0;">
+            <h2 style="color: #2c3e50; margin-bottom: 1rem;">
+                {% if error_code == 404 %}
+                    Page Not Found
+                {% elif error_code == 403 %}
+                    Access Forbidden
+                {% elif error_code == 400 %}
+                    Bad Request
+                {% elif error_code == 405 %}
+                    Method Not Allowed
+                {% elif error_code == 500 %}
+                    Internal Server Error
+                {% elif error_code == 503 %}
+                    Service Unavailable
+                {% else %}
+                    Something Went Wrong
+                {% endif %}
+            </h2>
+            <p style="color: #7f8c8d; font-size: 1.2rem;">{{ error_message }}</p>
         </div>
+
+        <!-- Helpful Description -->
+        <div style="margin: 2rem 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+            {% if error_code == 404 %}
+                <p style="color: #7f8c8d;">The page you're looking for might have been moved, deleted, or the URL was mistyped.</p>
+            {% elif error_code == 403 %}
+                <p style="color: #7f8c8d;">You don't have permission to access this resource. Please check your credentials.</p>
+            {% elif error_code == 400 %}
+                <p style="color: #7f8c8d;">The request contained invalid data. Please check your input and try again.</p>
+            {% elif error_code == 405 %}
+                <p style="color: #7f8c8d;">The HTTP method used is not allowed for this endpoint.</p>
+            {% elif error_code == 500 %}
+                <p style="color: #7f8c8d;">We're experiencing technical difficulties. Our team has been notified.</p>
+            {% elif error_code == 503 %}
+                <p style="color: #7f8c8d;">Our services are temporarily down for maintenance. Please try again in a few minutes.</p>
+            {% endif %}
+        </div>
+
+        <div class="item-actions" style="justify-content: center; margin-top: 3rem;">
+            {% if home_url %}
+                <a href="{{ home_url }}" class="btn btn-primary">
+                    🏠 Go to Homepage
+                </a>
+            {% endif %}
+
+            {% if back_url and back_url != request.url %}
+                <a href="{{ back_url }}" class="btn btn-secondary">
+                    ← Go Back
+                </a>
+            {% else %}
+                <a href="javascript:history.back()" class="btn btn-secondary">
+                    ← Go Back
+                </a>
+            {% endif %}
+
+            {% if error_code == 404 %}
+                <a href="{{ url_for('users.list_users') }}" class="btn btn-success">
+                    👥 Browse Users
+                </a>
+                <a href="{{ url_for('trivia.global_leaderboard') }}" class="btn btn-warning">
+                    🏆 View Leaderboard
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Easter Egg -->
+        {% if error_code == 404 %}
+            <div style="margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 8px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎬 Movie Quote of the Day</h3>
+                <p style="color: #7f8c8d; font-style: italic; font-size: 1.1rem;">
+                    {% set quotes = [
+                        '"I feel the need... the need for speed!" - Top Gun',
+                        '"May the Force be with you." - Star Wars',
+                        '"Here\'s looking at you, kid." - Casablanca',
+                        '"I\'ll be back." - The Terminator',
+                        '"Life is like a box of chocolates..." - Forrest Gump'
+                    ] %}
+                    {{ quotes | random }}
+                </p>
+            </div>
+        {% endif %}
+
+        {% if config.DEBUG and error_code == 500 %}
+            <details style="margin-top: 2rem; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <summary style="cursor: pointer; color: #e74c3c; font-weight: bold;">🔧 Technical Details (Debug Mode)</summary>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem; font-family: monospace; font-size: 0.9rem;">
+                    <p><strong>URL:</strong> {{ request.url }}</p>
+                    <p><strong>Method:</strong> {{ request.method }}</p>
+                    <p><strong>User Agent:</strong> {{ request.headers.get('User-Agent', 'Unknown') }}</p>
+                    <p><strong>Timestamp:</strong> {{ moment().format('YYYY-MM-DD HH:mm:ss') if moment else 'Unknown' }}</p>
+                </div>
+            </details>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
