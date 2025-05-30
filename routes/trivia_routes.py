@@ -183,6 +183,23 @@ def trivia_results():
     score = trivia_session['score']
     percentage = round((score / total_questions) * 100) if total_questions > 0 else 0
 
+    try:
+        score_data = {
+            'user_id': trivia_session['user_id'],
+            'trivia_type': trivia_session['type'],
+            'movie_id': trivia_session.get('movie_id'),
+            'score': score,
+            'total_questions': total_questions,
+            'percentage': percentage,
+            'completion_time': None
+        }
+
+        data_manager.save_trivia_score(score_data)
+        print(f"✅ Saved trivia score: {score}/{total_questions} ({percentage}%)")
+
+    except Exception as e:
+        print(f"🔴 Error saving trivia score: {e}")
+
     if percentage >= 90:
         performance = "🏆 Movie Master!"
     elif percentage >= 75:
@@ -234,3 +251,76 @@ def trivia_quit():
         return redirect(back_url)
 
     return redirect(url_for('users.list_users'))
+
+
+# ==================== LEADERBOARD ROUTES ====================
+
+@trivia_bp.route('/leaderboard')
+def global_leaderboard():
+    """Global trivia leaderboard"""
+    try:
+        leaderboard = data_manager.get_global_leaderboard(limit=20)
+        return render_template('leaderboard.html',
+                               leaderboard=leaderboard,
+                               leaderboard_type='global',
+                               title='🏆 Global Trivia Leaderboard')
+    except Exception as e:
+        flash(f'Error loading leaderboard: {str(e)}', 'error')
+        return redirect(url_for('users.list_users'))
+
+
+@trivia_bp.route('/leaderboard/collection')
+def collection_leaderboard():
+    """Collection trivia leaderboard"""
+    try:
+        leaderboard = data_manager.get_collection_leaderboard(limit=20)
+        return render_template('leaderboard.html',
+                               leaderboard=leaderboard,
+                               leaderboard_type='collection',
+                               title='🎯 Collection Trivia Leaderboard')
+    except Exception as e:
+        flash(f'Error loading collection leaderboard: {str(e)}', 'error')
+        return redirect(url_for('users.list_users'))
+
+
+@trivia_bp.route('/users/<int:user_id>/movies/<int:movie_id>/leaderboard')
+def movie_leaderboard(user_id, movie_id):
+    """Movie-specific leaderboard"""
+    try:
+        movies = data_manager.get_user_movies(user_id)
+        movie = next((m for m in movies if m['id'] == movie_id), None)
+
+        if not movie:
+            flash('Movie not found', 'error')
+            return redirect(url_for('users.list_users'))
+
+        leaderboard = data_manager.get_movie_leaderboard(movie_id, limit=15)
+        return render_template('leaderboard.html',
+                               leaderboard=leaderboard,
+                               leaderboard_type='movie',
+                               title=f'🎬 "{movie["title"]}" Trivia Leaderboard',
+                               movie=movie,
+                               back_url=url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+    except Exception as e:
+        flash(f'Error loading movie leaderboard: {str(e)}', 'error')
+        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+
+@trivia_bp.route('/users/<int:user_id>/trivia-stats')
+def user_trivia_stats(user_id):
+    """User's personal trivia statistics"""
+    try:
+        users = data_manager.get_all_users()
+        user = next((u for u in users if u['id'] == user_id), None)
+
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('users.list_users'))
+
+        stats = data_manager.get_user_trivia_stats(user_id)
+        return render_template('user_trivia_stats.html',
+                               user=user,
+                               stats=stats)
+    except Exception as e:
+        flash(f'Error loading trivia stats: {str(e)}', 'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
