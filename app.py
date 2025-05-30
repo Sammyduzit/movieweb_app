@@ -2,6 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from flask import Flask, redirect, url_for, render_template
 from datamanager import init_database, User, Movie, SQLiteDataManager
 from routes import user_bp, movie_bp, review_bp, api_bp, trivia_bp
+from utils.template_helpers import register_template_helpers
 import os
 
 
@@ -19,6 +20,8 @@ def create_app():
     app.config['SECRET_KEY'] = 'your-secret-key-here'
 
     init_database(app)
+
+    register_template_helpers(app)
 
     app.register_blueprint(user_bp)
     app.register_blueprint(movie_bp)
