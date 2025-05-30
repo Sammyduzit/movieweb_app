@@ -37,6 +37,10 @@ class Movie(db.Model):
     poster = db.Column(db.String(500), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'title', 'year', name='unique_user_movie'),
+    )
+
     trivia_scores = db.relationship('TriviaScore', back_populates='movie', lazy=True)
     reviews = db.relationship('Review', backref='movie', lazy=True, cascade='all, delete-orphan')
 
