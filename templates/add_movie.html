@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Add Movie - MovieWeb App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Add Movie for {{ user.name }}</h1>
+    
+    <form method="POST" action="/users/{{ user.id }}/add_movie">
+        <div class="form-group">
+            <label for="title" class="form-label">Movie Title:</label>
+            <input type="text" id="title" name="title" class="form-input" required>
+            <small style="color: #7f8c8d;">Movie details will be fetched automatically from OMDb API</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="director" class="form-label">Director:</label>
+            <input type="text" id="director" name="director" class="form-input">
+            <small style="color: #7f8c8d;">Optional - will be filled from API if available</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="year" class="form-label">Year:</label>
+            <input type="number" id="year" name="year" class="form-input" min="1900" max="2030">
+        </div>
+        
+        <div class="form-group">
+            <label for="genre" class="form-label">Genre:</label>
+            <input type="text" id="genre" name="genre" class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="rating" class="form-label">Your Rating (1-10):</label>
+            <input type="number" id="rating" name="rating" class="form-input" min="1" max="10" step="0.1">
+        </div>
+        
+        <div class="form-group" style="text-align: center;">
+            <button type="submit" class="btn btn-success">Add Movie</button>
+            <a href="/users/{{ user.id }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

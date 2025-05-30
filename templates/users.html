@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Users - MovieWeb App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Users</h1>
+    
+    {% if users %}
+        <ul class="item-list">
+            {% for user in users %}
+                <li class="item">
+                    <div class="item-title">{{ user.name }}</div>
+                    <div class="item-details">{{ user.email }}</div>
+                    <div class="item-actions">
+                        <a href="/users/{{ user.id }}" class="btn btn-primary">View Movies</a>
+                        <a href="/users/{{ user.id }}/add_movie" class="btn btn-success">Add Movie</a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="no-items">
+            <p>No users found.</p>
+            <a href="/add_user" class="btn btn-primary">Add First User</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

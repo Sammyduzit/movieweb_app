@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Review - {{ movie.title }} - MovieWeb App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">← Back to {{ movie.title }}</a>
+    </div>
+    
+    <div class="edit-review-container">
+        <h1>Edit Review for "{{ movie.title }}"</h1>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="content" class="form-label">Your Review:</label>
+                <textarea id="content" name="content" class="form-input" rows="4" required>{{ review.content }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="reviewer_rating" class="form-label">Your Rating (1-10):</label>
+                <input type="number" id="reviewer_rating" name="reviewer_rating" 
+                       class="form-input" min="1" max="10" 
+                       value="{{ review.reviewer_rating or '' }}" placeholder="Optional">
+            </div>
+            
+            <div class="form-group" style="text-align: center;">
+                <button type="submit" class="btn btn-success">Update Review</button>
+                <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
