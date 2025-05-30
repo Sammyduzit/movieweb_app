@@ -2,10 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datamanager import SQLiteDataManager
 from sqlalchemy.exc import SQLAlchemyError
 
-# Create blueprint
 review_bp = Blueprint('reviews', __name__, url_prefix='/users/<int:user_id>/movies/<int:movie_id>')
 
-# Initialize data manager
 data_manager = SQLiteDataManager()
 
 

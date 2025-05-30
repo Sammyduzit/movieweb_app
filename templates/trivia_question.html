@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if trivia_type == 'movie' %}Movie Trivia{% else %}Collection Trivia{% endif %} - Question {{ progress.current }} - MovieWeb App
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Progress Bar -->
+    <div class="trivia-progress">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress.percentage }}%"></div>
+        </div>
+        <div class="progress-text">
+            Question {{ progress.current }} of {{ progress.total }} ({{ progress.percentage }}%)
+        </div>
+    </div>
+    
+    <!-- Question Card -->
+    <div class="trivia-card">
+        <div class="question-header">
+            <span class="difficulty-badge difficulty-{{ question.difficulty or 'medium' }}">
+                {{ question.difficulty or 'medium' }}
+            </span>
+        </div>
+        
+        <div class="question-text">
+            {{ question.question }}
+        </div>
+        
+        <!-- Answer Options -->
+        <form method="POST" action="{{ url_for('trivia.trivia_answer') }}" class="trivia-form">
+            {% for option in question.options %}
+                <button type="submit" name="answer" value="{{ loop.index0 }}" class="option-button">
+                    <span class="option-letter">{{ 'ABCD'[loop.index0] }}</span>
+                    <span class="option-text">{{ option }}</span>
+                </button>
+            {% endfor %}
+        </form>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="trivia-actions">
+        <a href="{{ url_for('trivia.trivia_quit') }}" class="btn btn-secondary" 
+           onclick="return confirm('Are you sure you want to quit the trivia?')">
+            🚪 Quit Trivia
+        </a>
+    </div>
+</div>
+{% endblock %}

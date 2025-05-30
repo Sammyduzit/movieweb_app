@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Trivia Results - MovieWeb App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Results Header -->
+    <div class="results-header">
+        <h1 class="results-title">
+            {% if results.type == 'movie' %}🎬 Movie Trivia{% else %}🎭 Collection Trivia{% endif %} Complete!
+        </h1>
+        
+        <div class="score-display">
+            <div class="score-circle">
+                <div class="score-number">{{ results.score }}/{{ results.total }}</div>
+                <div class="score-percentage">{{ results.percentage }}%</div>
+            </div>
+            <div class="performance-badge">{{ results.performance }}</div>
+        </div>
+    </div>
+    
+    <!-- Detailed Results -->
+    <div class="results-details">
+        <h2>📊 Question Review</h2>
+        
+        {% for answer in results.answers %}
+            <div class="answer-review {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
+                <div class="question-number">Q{{ loop.index }}</div>
+                <div class="question-content">
+                    <div class="question-text">{{ answer.question }}</div>
+                    
+                    <div class="answer-options">
+                        {% for option in answer.options %}
+                            <div class="option-item
+                                {% if loop.index0 == answer.correct_answer %}correct-answer{% endif %}
+                                {% if loop.index0 == answer.user_answer and not answer.is_correct %}wrong-answer{% endif %}
+                                {% if loop.index0 == answer.user_answer and answer.is_correct %}user-correct{% endif %}">
+                                <span class="option-letter">{{ 'ABCD'[loop.index0] }}</span>
+                                <span class="option-text">{{ option }}</span>
+                                {% if loop.index0 == answer.correct_answer %}✅{% endif %}
+                                {% if loop.index0 == answer.user_answer and not answer.is_correct %}❌{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="results-actions">
+        <a href="{{ back_url }}" class="btn btn-primary">🔙 Back</a>
+        {% if results.type == 'movie' %}
+            <a href="{{ back_url.replace('/movies/', '/movies/').replace(back_url.split('/')[-1], back_url.split('/')[-1] + '/trivia') }}" 
+               class="btn btn-success">🔄 Play Again</a>
+        {% else %}
+            <a href="{{ back_url.replace('/', '/trivia') }}" class="btn btn-success">🔄 Play Again</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

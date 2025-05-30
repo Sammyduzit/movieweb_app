@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from flask import Flask, redirect, url_for, render_template
 from datamanager import init_database, User, Movie, SQLiteDataManager
-from routes import user_bp, movie_bp, review_bp, api_bp
+from routes import user_bp, movie_bp, review_bp, api_bp, trivia_bp
 import os
 
 
@@ -24,6 +24,7 @@ def create_app():
     app.register_blueprint(movie_bp)
     app.register_blueprint(review_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(trivia_bp)
 
     @app.route('/')
     def index():

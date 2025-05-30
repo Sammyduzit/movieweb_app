@@ -26,11 +26,13 @@
                     {% if movie.genre %}<p><strong>Genre:</strong> {{ movie.genre }}</p>{% endif %}
                     {% if movie.rating %}<p><strong>Rating:</strong> {{ movie.rating }}/10</p>{% endif %}
                 </div>
-                
+
                 <div class="movie-actions">
+                    <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}"
+                       class="btn btn-primary">🧠 Movie Trivia (7 Questions)</a>
                     <a href="/users/{{ user.id }}/update_movie/{{ movie.id }}" class="btn btn-warning">Edit Movie</a>
-                    <a href="/users/{{ user.id }}/delete_movie/{{ movie.id }}" 
-                       class="btn btn-danger" 
+                    <a href="/users/{{ user.id }}/delete_movie/{{ movie.id }}"
+                       class="btn btn-danger"
                        onclick="return confirm('Are you sure you want to delete this movie?')">Delete Movie</a>
                 </div>
             </div>

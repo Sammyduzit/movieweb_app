@@ -82,3 +82,4 @@ class Review(db.Model):
 
     def __repr__(self):
         return f'<Review {self.id} for Movie {self.movie_id}>'
+

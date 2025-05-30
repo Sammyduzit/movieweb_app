@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Trivia Unavailable - MovieWeb App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="trivia-error">
+        <div class="relaxo-container">
+            <div class="relaxo-image">😴</div>
+            <div class="relaxo-text">Relaxo is sleeping...</div>
+        </div>
+        
+        <h2>🤖 AI Trivia Temporarily Unavailable</h2>
+        
+        <div class="error-message">
+            <p>Our AI trivia generator is taking a nap right now.</p>
+            <p>{% if error_type == 'movie' %}Try the trivia again later, or explore other movies!{% else %}Try collection trivia again later, or add more movies to your collection!{% endif %}</p>
+        </div>
+        
+        <div class="error-actions">
+            <a href="{{ back_url }}" class="btn btn-primary">🔙 Go Back</a>
+            <a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">👥 All Users</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

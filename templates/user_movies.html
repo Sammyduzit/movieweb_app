@@ -5,8 +5,10 @@
 {% block content %}
 <div class="container">
     <h1 class="page-title">{{ user.name }}'s Favorite Movies</h1>
-    
+
     <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="{{ url_for('trivia.collection_trivia', user_id=user.id) }}"
+           class="btn btn-primary trivia-btn">🎯 Collection Trivia (21 Questions)</a>
         <a href="/users/{{ user.id }}/add_movie" class="btn btn-success">Add New Movie</a>
         <a href="/users" class="btn btn-secondary">Back to Users</a>
     </div>
