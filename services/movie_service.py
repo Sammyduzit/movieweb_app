@@ -5,9 +5,9 @@ from datamanager import SQLiteDataManager
 from services.omdb_service import OMDbService
 from exceptions import (
     UserNotFoundError, MovieNotFoundError, ValidationError,
-    DatabaseError, ExternalAPIError
+    DatabaseError, ExternalAPIError, DuplicateMovieError
 )
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 import re
 
 
@@ -39,6 +39,8 @@ class MovieService:
                     raise ValidationError('year', 'Year must be between 1800 and 2050')
             except (ValueError, TypeError):
                 raise ValidationError('year', 'Year must be a valid number')
+        else:
+            year = None
 
         if rating:
             try:
@@ -47,6 +49,8 @@ class MovieService:
                     raise ValidationError('rating', 'Rating must be between 1 and 10')
             except (ValueError, TypeError):
                 raise ValidationError('rating', 'Rating must be a valid number')
+        else:
+            rating = None
 
         if director and len(director) > 100:
             raise ValidationError('director', 'Director name must be less than 100 characters')
@@ -105,8 +109,21 @@ class MovieService:
 
         enhanced_data = self.enhance_movie_with_omdb(validated_data)
 
+        existing_movies = self.get_user_movies(user_id)
+        title = enhanced_data['title'].lower()
+        year = enhanced_data.get('year')
+
+        for movie in existing_movies:
+            if (movie['title'].lower() == title and
+                    movie.get('year') == year):
+                raise DuplicateMovieError(user_id, enhanced_data['title'], year)
+
         try:
             return self.data_manager.add_user_movie(user_id, enhanced_data)
+        except IntegrityError as e:
+            if 'unique_user_movie' in str(e):
+                raise DuplicateMovieError(user_id, enhanced_data['title'], year)
+            raise DatabaseError('creating movie', e)
         except ValueError as e:
             if 'not found' in str(e):
                 raise UserNotFoundError(user_id)
@@ -119,10 +136,32 @@ class MovieService:
         validated_data = self.validate_movie_data(movie_data)
 
         try:
+            current_movie, user_id = self.get_movie_by_id(movie_id)
+        except MovieNotFoundError:
+            raise MovieNotFoundError(movie_id)
+
+        existing_movies = self.get_user_movies(user_id)
+        title = validated_data['title'].lower()
+        year = validated_data.get('year')
+
+        for movie in existing_movies:
+            if movie['id'] == movie_id:
+                continue
+
+            if (movie['title'].lower() == title and
+                    movie.get('year') == year):
+                raise DuplicateMovieError(user_id, validated_data['title'], year)
+
+        try:
             result = self.data_manager.update_movie(movie_id, validated_data)
             if not result:
                 raise MovieNotFoundError(movie_id)
             return result
+        except IntegrityError as e:
+            # Database constraint backup
+            if 'unique_user_movie' in str(e):
+                raise DuplicateMovieError(user_id, validated_data['title'], year)
+            raise DatabaseError('updating movie', e)
         except SQLAlchemyError as e:
             raise DatabaseError('updating movie', e)
 
