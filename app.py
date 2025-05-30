@@ -9,33 +9,27 @@ def create_app():
     """Application factory function to create and configure the Flask app."""
     app = Flask(__name__)
 
-    # CHANGED: Absolute path configuration for database
     base_dir = os.path.abspath(os.path.dirname(__file__))
     data_dir = os.path.join(base_dir, 'instance')
     os.makedirs(data_dir, exist_ok=True)
     db_path = os.path.join(data_dir, "moviewebapp.sqlite")
 
-    # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'your-secret-key-here'
 
-    # Initialize database
     init_database(app)
 
-    # Register blueprints
     app.register_blueprint(user_bp)
     app.register_blueprint(movie_bp)
     app.register_blueprint(review_bp)
     app.register_blueprint(api_bp)
 
-    # Home route
     @app.route('/')
     def index():
         """Redirect to users page"""
         return redirect(url_for('users.list_users'))
 
-    # Error Handlers
     @app.errorhandler(404)
     def not_found(error):
         """Handle 404 errors"""
@@ -51,9 +45,6 @@ def create_app():
                                error_message="Internal server error"), 500
 
     return app
-
-
-
 
 
 def main():
