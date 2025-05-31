@@ -4,6 +4,7 @@ Handles trivia generation, scoring, and leaderboard operations.
 """
 from config import TriviaConfig, LeaderboardConfig
 from datamanager import SQLiteDataManager
+from services.openai_service import OpenAIService
 from services.rapidapi_service import RapidAPIService
 from exceptions import (
     TriviaError, InsufficientMoviesError, UserNotFoundError,
@@ -18,6 +19,7 @@ class TriviaService:
     def __init__(self):
         self.data_manager = SQLiteDataManager()
         self.rapidapi_service = RapidAPIService()
+        self.openai_service = OpenAIService()
 
     def validate_user(self, user_id):
         """Validate that user exists, raise UserNotFoundError if not"""
@@ -47,53 +49,97 @@ class TriviaService:
         user = self.validate_user(user_id)
         movie = self.validate_movie(user_id, movie_id)
 
+        trivia_data = None
+        api_used = "none"
+
         try:
+            print("🎯 Attempting trivia generation with RapidAPI...")
             trivia_data = self.rapidapi_service.generate_movie_trivia(movie)
-
-            if not trivia_data or not trivia_data.get('questions'):
-                raise TriviaError("Failed to generate movie trivia questions", "movie")
-
-            questions = trivia_data['questions'][:TriviaConfig.MOVIE_QUESTIONS]
-
-            return {
-                'type': 'movie',
-                'user_id': user_id,
-                'movie_id': movie_id,
-                'questions': questions,
-                'user': user,
-                'movie': movie
-            }
+            if trivia_data and trivia_data.get('questions'):
+                api_used = "rapidapi"
+                print("✅ RapidAPI trivia generation successful")
+            else:
+                print("⚠️ RapidAPI failed, trying fallback...")
 
         except Exception as e:
-            if isinstance(e, TriviaError):
-                raise
-            raise ExternalAPIError("RapidAPI", str(e))
+            print(f"⚠️ RapidAPI error: {e}")
+
+        if not trivia_data or not trivia_data.get('questions'):
+            try:
+                print("🔄 Falling back to OpenAI ChatGPT...")
+                trivia_data = self.openai_service.generate_movie_trivia(movie)
+                if trivia_data and trivia_data.get('questions'):
+                    api_used = "openai"
+                    print("✅ OpenAI trivia generation successful")
+                else:
+                    print("❌ OpenAI also failed")
+
+            except Exception as e:
+                print(f"❌ OpenAI fallback error: {e}")
+
+        if not trivia_data or not trivia_data.get('questions'):
+            raise TriviaError("Both RapidAPI and OpenAI failed to generate movie trivia questions", "movie")
+
+        questions = trivia_data['questions'][:TriviaConfig.MOVIE_QUESTIONS]
+
+        return {
+            'type': 'movie',
+            'user_id': user_id,
+            'movie_id': movie_id,
+            'questions': questions,
+            'user': user,
+            'movie': movie,
+            'api_used': api_used
+        }
+
 
     def generate_collection_trivia(self, user_id):
         """Generate trivia questions for user's movie collection"""
         user = self.validate_user(user_id)
         movies = self.validate_collection_trivia_requirements(user_id)
 
+        trivia_data = None
+        api_used = "none"
+
         try:
+            print("🎯 Attempting collection trivia with RapidAPI...")
             trivia_data = self.rapidapi_service.generate_collection_trivia(movies)
-
-            if not trivia_data or not trivia_data.get('questions'):
-                raise TriviaError("Failed to generate collection trivia questions", "collection")
-
-            questions = trivia_data['questions'][:TriviaConfig.COLLECTION_QUESTIONS]
-
-            return {
-                'type': 'collection',
-                'user_id': user_id,
-                'questions': questions,
-                'user': user,
-                'movies': movies
-            }
+            if trivia_data and trivia_data.get('questions'):
+                api_used = "rapidapi"
+                print("✅ RapidAPI collection trivia successful")
+            else:
+                print("⚠️ RapidAPI failed, trying fallback...")
 
         except Exception as e:
-            if isinstance(e, (TriviaError, InsufficientMoviesError)):
-                raise
-            raise ExternalAPIError("RapidAPI", str(e))
+            print(f"⚠️ RapidAPI error: {e}")
+
+        if not trivia_data or not trivia_data.get('questions'):
+            try:
+                print("🔄 Falling back to OpenAI ChatGPT...")
+                trivia_data = self.openai_service.generate_collection_trivia(movies)
+                if trivia_data and trivia_data.get('questions'):
+                    api_used = "openai"
+                    print("✅ OpenAI collection trivia successful")
+                else:
+                    print("❌ OpenAI also failed")
+
+            except Exception as e:
+                print(f"❌ OpenAI fallback error: {e}")
+
+        if not trivia_data or not trivia_data.get('questions'):
+            raise TriviaError("Both RapidAPI and OpenAI failed to generate "
+                              "collection trivia questions", "collection")
+
+        questions = trivia_data['questions'][:TriviaConfig.COLLECTION_QUESTIONS]
+
+        return {
+            'type': 'collection',
+            'user_id': user_id,
+            'questions': questions,
+            'user': user,
+            'movies': movies,
+            'api_used': api_used
+        }
 
     def process_trivia_answer(self, trivia_session, user_answer):
         """Process a trivia answer and update session"""
@@ -187,7 +233,6 @@ class TriviaService:
 
     def get_user_stats(self, user_id):
         """Get comprehensive trivia statistics for a user"""
-        # Validate user exists
         user = self.validate_user(user_id)
 
         try:
@@ -209,3 +254,16 @@ class TriviaService:
                     'recent_scores': []
                 }
             }
+
+    def test_apis(self):
+        """Test both API connections"""
+        print("🧪 Testing API connections...")
+
+        rapidapi_status = self.rapidapi_service.test_connection()
+        openai_status = self.openai_service.test_connection()
+
+        return {
+            'rapidapi': rapidapi_status,
+            'openai': openai_status,
+            'fallback_available': openai_status
+        }
