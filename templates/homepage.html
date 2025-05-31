@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieWeb Gaming Platform - Enter the Arena</title>
+
+    <!-- Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Gaming Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-homepage.css') }}">
+
+    <!-- Meta tags for better SEO -->
+    <meta name="description" content="Enter the ultimate movie gaming arena! Challenge your cinema knowledge with epic trivia battles, build your collection, and climb the leaderboards in MovieWeb Gaming Platform.">
+    <meta name="keywords" content="movie trivia, gaming, cinema challenge, movie collection, leaderboard, entertainment">
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="MovieWeb Gaming Platform - The Ultimate Cinema Challenge">
+    <meta property="og:description" content="Enter the arena where movie knowledge becomes legendary! Epic trivia battles await.">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="homepage-loader" id="loader">
+        <div class="loader-text">INITIALIZING ARENA...</div>
+    </div>
+
+    <!-- Main Homepage Arena -->
+    <div class="homepage-arena">
+        <!-- Cosmic Background Grid -->
+        <div class="cosmic-grid"></div>
+
+        <!-- Energy Orbs -->
+        <div class="energy-orbs">
+            <div class="energy-orb"></div>
+            <div class="energy-orb"></div>
+            <div class="energy-orb"></div>
+            <div class="energy-orb"></div>
+            <div class="energy-orb"></div>
+        </div>
+
+        <!-- Matrix Rain Effect -->
+        <div class="matrix-rain" id="matrixRain"></div>
+
+        <!-- Main Content -->
+        <div class="homepage-content">
+            <!-- Logo Section -->
+            <div class="logo-container">
+                <h1 class="main-logo" id="mainLogo">
+                    MOVIEWEB
+                </h1>
+                <p class="tagline">
+                    WHERE <span class="highlight">CINEMA</span> BECOMES <span class="highlight">LEGENDARY</span>
+                </p>
+            </div>
+
+            <!-- Enter Portal -->
+            <div class="enter-portal">
+                <div class="portal-ring"></div>
+                <div class="portal-ring"></div>
+                <div class="portal-ring"></div>
+
+                <a href="{{ url_for('users.list_users') }}" class="enter-button" id="enterButton" style="display: inline-block; opacity: 1;">
+                    ⚡ ENTER THE ARENA ⚡
+                </a>
+            </div>
+
+            <!-- Features Preview -->
+            <div class="features-preview">
+                <div class="feature-card">
+                    <div class="feature-icon">🎬</div>
+                    <h3 class="feature-title">Epic Collections</h3>
+                    <p class="feature-description">Build your ultimate movie arsenal and showcase your cinema mastery</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3 class="feature-title">Trivia Battles</h3>
+                    <p class="feature-description">Test your knowledge with AI-generated questions that challenge even movie masters</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3 class="feature-title">Leaderboards</h3>
+                    <p class="feature-description">Climb the ranks and prove you're the ultimate cinema champion</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h3 class="feature-title">Reviews & Ratings</h3>
+                    <p class="feature-description">Share your thoughts and discover hidden cinema gems</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="homepage-footer">
+            <a href="{{ url_for('users.add_user') }}" class="scroll-hint-link">
+                Ready to begin your legend?
+            </a>
+            <div class="version-info">MOVIEWEB GAMING PLATFORM v2.0</div>
+        </div>
+    </div>
+
+    <!-- Core JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Remove loader after content loads
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.classList.add('fade-out');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 1000);
+            }, 2000);
+
+            // Matrix rain effect
+            function createMatrixRain() {
+                const matrixContainer = document.getElementById('matrixRain');
+                const characters = '01MOVIEWEB🎬🎮🏆⭐🧠⚡';
+
+                setInterval(() => {
+                    for (let i = 0; i < 3; i++) {
+                        const drop = document.createElement('div');
+                        drop.className = 'rain-drop';
+                        drop.textContent = characters[Math.floor(Math.random() * characters.length)];
+                        drop.style.left = Math.random() * 100 + 'vw';
+                        drop.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                        drop.style.opacity = Math.random() * 0.7 + 0.3;
+
+                        matrixContainer.appendChild(drop);
+
+                        // Remove after animation
+                        setTimeout(() => {
+                            if (drop.parentNode) {
+                                drop.parentNode.removeChild(drop);
+                            }
+                        }, 8000);
+                    }
+                }, 500);
+            }
+
+            // Start matrix rain
+            setTimeout(createMatrixRain, 1000);
+
+            // Enter button effects
+            const enterButton = document.getElementById('enterButton');
+
+            enterButton.addEventListener('mouseenter', function() {
+                // Add particle effects
+                for (let i = 0; i < 10; i++) {
+                    createParticle(this);
+                }
+
+                // Sound effect placeholder
+                console.log('🔊 POWER UP SOUND');
+            });
+
+            enterButton.addEventListener('click', function(e) {
+                // Epic click animation
+                this.style.transform = 'scale(0.95)';
+
+                // Screen flash effect
+                const flash = document.createElement('div');
+                flash.style.cssText = `
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(255, 255, 255, 0.9);
+                    z-index: 10000;
+                    pointer-events: none;
+                    opacity: 1;
+                    transition: opacity 0.3s ease;
+                `;
+                document.body.appendChild(flash);
+
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    setTimeout(() => flash.remove(), 300);
+                }, 100);
+
+                // Restore button
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+
+                console.log('🚀 ENTERING THE ARENA!');
+            });
+
+            // Create particle effect
+            function createParticle(element) {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: absolute;
+                    width: 4px;
+                    height: 4px;
+                    background: #00ffff;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 1000;
+                `;
+
+                const rect = element.getBoundingClientRect();
+                particle.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                particle.style.top = (rect.top + Math.random() * rect.height) + 'px';
+
+                document.body.appendChild(particle);
+
+                // Animate particle
+                particle.animate([
+                    {
+                        transform: 'translate(0, 0) scale(1)',
+                        opacity: 1
+                    },
+                    {
+                        transform: `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px) scale(0)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                }).onfinish = () => particle.remove();
+            }
+
+            // Logo typing effect
+            const logo = document.getElementById('mainLogo');
+            const originalText = 'MOVIEWEB';
+            logo.textContent = '';
+
+            setTimeout(() => {
+                let i = 0;
+                const typeWriter = () => {
+                    if (i < originalText.length) {
+                        logo.textContent += originalText.charAt(i);
+                        i++;
+                        setTimeout(typeWriter, 150);
+                    }
+                };
+                typeWriter();
+            }, 2500);
+
+            // Konami code easter egg
+            let konamiCode = [];
+            const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]; // ↑↑↓↓←→←→BA
+
+            document.addEventListener('keydown', function(e) {
+                konamiCode.push(e.keyCode);
+                if (konamiCode.length > konamiSequence.length) {
+                    konamiCode.shift();
+                }
+
+                if (konamiCode.join(',') === konamiSequence.join(',')) {
+                    // Ultimate mode activated!
+                    document.body.style.filter = 'hue-rotate(180deg) saturate(200%) brightness(1.2)';
+
+                    // Add ultimate badge
+                    const ultimateBadge = document.createElement('div');
+                    ultimateBadge.innerHTML = '👑 ULTIMATE MODE ACTIVATED 👑';
+                    ultimateBadge.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: linear-gradient(45deg, #ffd700, #ffff00);
+                        color: #000;
+                        padding: 2rem 4rem;
+                        border-radius: 2rem;
+                        font-family: 'Orbitron', monospace;
+                        font-weight: bold;
+                        font-size: 2rem;
+                        text-transform: uppercase;
+                        z-index: 10000;
+                        box-shadow: 0 0 50px #ffd700;
+                        animation: pulse 1s ease-in-out infinite;
+                    `;
+                    document.body.appendChild(ultimateBadge);
+
+                    setTimeout(() => {
+                        document.body.style.filter = '';
+                        ultimateBadge.remove();
+                    }, 5000);
+
+                    console.log('👑 ULTIMATE CINEMA MASTER DETECTED! 👑');
+                }
+            });
+
+            // Performance monitoring
+            const observer = new PerformanceObserver((list) => {
+                list.getEntries().forEach((entry) => {
+                    if (entry.entryType === 'navigation') {
+                        console.log(`🚀 Page loaded in ${entry.loadEventEnd - entry.loadEventStart}ms`);
+                    }
+                });
+            });
+            observer.observe({entryTypes: ['navigation']});
+
+            // Random inspirational quotes
+            const quotes = [
+                "Every great movie collection starts with a single film...",
+                "Cinema is a mirror by which we often see ourselves...",
+                "The movies are the only business where you can go out front and applaud yourself...",
+                "In the cinema, we do not think - we are thought...",
+                "Movies are a world of Fragments..."
+            ];
+
+            setInterval(() => {
+                if (Math.random() < 0.1) { // 10% chance every 5 seconds
+                    console.log('🎬 ' + quotes[Math.floor(Math.random() * quotes.length)]);
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
