@@ -86,3 +86,4 @@ class AppConfig:
     # Environment variables
     OMDB_API_KEY_ENV = 'OMDB_API_KEY'
     RAPIDAPI_KEY_ENV = 'RAPIDAPI_KEY'
+    OPENAI_API_KEY_ENV = 'OPENAI_API_KEY'
