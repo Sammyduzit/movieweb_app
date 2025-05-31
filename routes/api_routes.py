@@ -266,6 +266,34 @@ def reset_api_usage():
     except Exception as e:
         return error_response(f'Error resetting usage: {str(e)}', 500)
 
+
+@api_bp.route('/test-apis', methods=['GET'])
+def test_apis():
+    """GET /api/test-apis - Test both RapidAPI and OpenAI connections"""
+    try:
+        from services.trivia_service import TriviaService
+        trivia_service = TriviaService()
+        test_results = trivia_service.test_apis()
+
+        status_msg = []
+        if test_results['rapidapi']:
+            status_msg.append("RapidAPI: ✅ Working")
+        else:
+            status_msg.append("RapidAPI: ❌ Failed")
+
+        if test_results['openai']:
+            status_msg.append("OpenAI: ✅ Working")
+        else:
+            status_msg.append("OpenAI: ❌ Failed")
+
+        return success_response({
+            'api_tests': test_results,
+            'status_summary': status_msg,
+            'fallback_ready': test_results['fallback_available']
+        })
+    except Exception as e:
+        return error_response(f'Error testing APIs: {str(e)}', 500)
+
 # ==================== API INFO ENDPOINT ====================
 
 @api_bp.route('/', methods=['GET'])

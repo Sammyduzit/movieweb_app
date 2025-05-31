@@ -52,7 +52,8 @@ def movie_trivia(user_id, movie_id, user, movie):
             'questions': trivia_data['questions'],
             'current_question': 0,
             'score': 0,
-            'answers': []
+            'answers': [],
+            'api_used': trivia_data.get('api_used', 'unknown')
         }
 
         return redirect(url_for('trivia.trivia_question'))
@@ -99,7 +100,8 @@ def collection_trivia(user_id, user):
             'questions': trivia_data['questions'],
             'current_question': 0,
             'score': 0,
-            'answers': []
+            'answers': [],
+            'api_used': trivia_data.get('api_used', 'unknown')
         }
 
         return redirect(url_for('trivia.trivia_question'))
