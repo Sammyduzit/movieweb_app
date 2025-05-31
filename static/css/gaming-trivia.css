@@ -1,0 +1,488 @@
+/* ========================================
+   TRIVIA BATTLE ARENA STYLES
+   Gaming styles for trivia questions
+======================================== */
+
+/* ========================================
+   TRIVIA ANIMATIONS
+======================================== */
+@keyframes progressFlow {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 200% 0%;
+    }
+}
+
+@keyframes progressGlow {
+    0%, 100% {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes answerReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes correctAnswer {
+    0% {
+        background: linear-gradient(45deg, #10b981, #059669);
+    }
+    50% {
+        background: linear-gradient(45deg, #10b981, #059669, #10b981);
+        box-shadow: 0 0 30px #10b981;
+    }
+    100% {
+        background: linear-gradient(45deg, #10b981, #059669);
+    }
+}
+
+@keyframes wrongAnswer {
+    0% {
+        background: linear-gradient(45deg, #ef4444, #dc2626);
+    }
+    50% {
+        background: linear-gradient(45deg, #ef4444, #dc2626, #ef4444);
+        box-shadow: 0 0 30px #ef4444;
+    }
+    100% {
+        background: linear-gradient(45deg, #ef4444, #dc2626);
+    }
+}
+
+@keyframes battleEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) rotateY(180deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotateY(0deg);
+    }
+}
+
+/* ========================================
+   BATTLE ARENA LAYOUT
+======================================== */
+.battle-arena {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 2rem 0;
+}
+
+.battle-arena::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(255, 255, 0, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.battle-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* ========================================
+   PROGRESS HUD
+======================================== */
+.progress-hud {
+    background: linear-gradient(145deg, rgba(0, 0, 0, 0.8), rgba(26, 26, 46, 0.9));
+    border: 2px solid #00ffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-hud::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+    border-radius: inherit;
+    z-index: -1;
+    animation: gradientShift 3s ease infinite;
+}
+
+.progress-bar-container {
+    background: rgba(0, 0, 0, 0.5);
+    height: 1.5rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #00ffff;
+    margin-bottom: 1rem;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff006e, #8338ec, #3a86ff, #00ffff);
+    background-size: 200% 100%;
+    animation: progressFlow 2s linear infinite;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: progressGlow 1.5s ease-in-out infinite;
+}
+
+.progress-text {
+    text-align: center;
+    color: #67e8f9;
+    font-weight: bold;
+    font-size: 1rem;
+    font-family: 'Orbitron', monospace;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.current-score {
+    color: #fbbf24;
+    font-weight: bold;
+    font-family: 'Orbitron', monospace;
+}
+
+.question-counter {
+    color: #8b5cf6;
+    font-weight: bold;
+    font-family: 'Orbitron', monospace;
+}
+
+/* ========================================
+   QUESTION ARENA
+======================================== */
+.question-arena {
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+    animation: battleEnter 0.8s ease-out;
+}
+
+.question-arena::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 3px;
+    background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #ff006e);
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+    animation: gradientShift 4s ease infinite;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.question-number {
+    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    color: white;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    font-family: 'Orbitron', monospace;
+}
+
+.difficulty-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem;
+    font-weight: bold;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'Orbitron', monospace;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-easy {
+    background: linear-gradient(45deg, #10b981, #059669);
+    color: white;
+}
+
+.difficulty-medium {
+    background: linear-gradient(45deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.difficulty-hard {
+    background: linear-gradient(45deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.question-text {
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    text-align: center;
+    font-weight: 600;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   ANSWER OPTIONS
+======================================== */
+.answers-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.answer-option {
+    background: linear-gradient(145deg, #1e293b, #334155);
+    border: 2px solid #475569;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0;
+    animation: answerReveal 0.5s ease-out forwards;
+}
+
+.answer-option:nth-child(1) { animation-delay: 0.1s; }
+.answer-option:nth-child(2) { animation-delay: 0.2s; }
+.answer-option:nth-child(3) { animation-delay: 0.3s; }
+.answer-option:nth-child(4) { animation-delay: 0.4s; }
+
+.answer-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.answer-option:hover::before {
+    left: 100%;
+}
+
+.answer-option:hover {
+    transform: translateY(-5px);
+    border-color: #00ffff;
+    box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+}
+
+.answer-letter {
+    background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+    color: white;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    font-family: 'Orbitron', monospace;
+}
+
+.answer-text {
+    flex: 1;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #fff;
+}
+
+/* ========================================
+   ANSWER STATES
+======================================== */
+.answer-option.correct {
+    animation: correctAnswer 1s ease;
+    border-color: #10b981;
+}
+
+.answer-option.correct .answer-letter {
+    background: linear-gradient(45deg, #10b981, #059669);
+}
+
+.answer-option.wrong {
+    animation: wrongAnswer 1s ease;
+    border-color: #ef4444;
+}
+
+.answer-option.wrong .answer-letter {
+    background: linear-gradient(45deg, #ef4444, #dc2626);
+}
+
+.answer-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ========================================
+   BATTLE CONTROLS
+======================================== */
+.battle-controls {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.quit-battle-btn {
+    background: linear-gradient(45deg, #6b7280, #4b5563);
+    border: 2px solid #9ca3af;
+    color: #fff;
+    padding: 0.75rem 2rem;
+    border-radius: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-family: 'Orbitron', monospace;
+}
+
+.quit-battle-btn:hover {
+    background: linear-gradient(45deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+/* ========================================
+   TRIVIA TYPE INDICATORS
+======================================== */
+.trivia-type-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-weight: bold;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-family: 'Orbitron', monospace;
+}
+
+.trivia-type-movie {
+    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.trivia-type-collection {
+    background: linear-gradient(45deg, #10b981, #059669);
+    color: white;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE
+======================================== */
+@media (max-width: 768px) {
+    .battle-container {
+        padding: 0 1rem;
+    }
+
+    .question-arena {
+        padding: 1.5rem;
+    }
+
+    .question-text {
+        font-size: 1.25rem;
+    }
+
+    .question-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .answer-option {
+        padding: 1rem;
+    }
+
+    .answer-text {
+        font-size: 1rem;
+    }
+
+    .progress-hud {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .battle-arena {
+        padding: 1rem 0;
+    }
+
+    .question-text {
+        font-size: 1.125rem;
+    }
+
+    .answer-option {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+
+    .answer-letter {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+}

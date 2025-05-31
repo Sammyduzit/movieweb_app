@@ -1,0 +1,434 @@
+/* ========================================
+   MOVIE CARDS & COLLECTIONS
+   Gaming styles for movie displays
+======================================== */
+
+/* ========================================
+   MOVIE CARD ANIMATIONS
+======================================== */
+@keyframes movieCardEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) rotateX(20deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg);
+    }
+}
+
+@keyframes posterZoom {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes ratingPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 25px rgba(255, 255, 0, 0.8);
+    }
+}
+
+/* ========================================
+   MOVIE GRID LAYOUTS
+======================================== */
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.movie-card {
+    /* Inherits from .gaming-card in base */
+    animation: movieCardEnter 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.movie-card:nth-child(1) { animation-delay: 0.1s; }
+.movie-card:nth-child(2) { animation-delay: 0.2s; }
+.movie-card:nth-child(3) { animation-delay: 0.3s; }
+.movie-card:nth-child(4) { animation-delay: 0.4s; }
+.movie-card:nth-child(5) { animation-delay: 0.5s; }
+.movie-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* ========================================
+   MOVIE POSTER
+======================================== */
+.movie-poster {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem 1rem 0 0;
+}
+.poster-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.movie-poster img {
+    width: 100%;
+    height: 16rem;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.poster-link:hover img {
+    transform: scale(1.05);
+}
+
+.poster-link:hover div {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+.gaming-card:hover .movie-poster img {
+    animation: posterZoom 0.3s ease forwards;
+}
+
+.no-poster {
+    width: 100%;
+    height: 16rem;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-family: 'Orbitron', monospace;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+
+/* ========================================
+   RATING ORB
+======================================== */
+.rating-orb {
+    background: radial-gradient(circle, #ffff00, #ff6b00, #ff006e);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-weight: bold;
+    font-size: 0.875rem;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-family: 'Orbitron', monospace;
+    transition: all 0.3s ease;
+}
+
+.gaming-card:hover .rating-orb {
+    animation: ratingPulse 1s ease infinite;
+}
+
+/* ========================================
+   MOVIE STATUS BADGES
+======================================== */
+.movie-status {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 1rem;
+}
+
+.movie-status-text {
+    font-size: 0.75rem;
+    font-weight: bold;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-ready {
+    color: #67e8f9;
+}
+
+.status-potential {
+    color: #10b981;
+}
+
+.status-legendary {
+    color: #fbbf24;
+}
+
+.status-epic {
+    color: #3b82f6;
+}
+
+/* ========================================
+   MOVIE INFO
+======================================== */
+.movie-info {
+    padding: 1.5rem;
+}
+
+.movie-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.movie-meta {
+    color: #8b5cf6;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.movie-genre {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.movie-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.movie-actions .trivia-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+}
+
+.movie-actions .neon-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+/* ========================================
+   COLLECTION STATS
+======================================== */
+.collection-stats {
+    display: inline-block;
+    margin-top: 2rem;
+}
+
+.collection-stats p {
+    color: #67e8f9;
+    font-size: 1.125rem;
+    font-family: 'Orbitron', monospace;
+}
+
+.collection-count {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fbbf24;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+    transition: all 0.3s ease;
+}
+
+.collection-count:hover {
+    transform: scale(1.1);
+    text-shadow: 0 0 30px rgba(251, 191, 36, 0.8);
+}
+
+/* ========================================
+   ACHIEVEMENT SECTION
+======================================== */
+.achievement-section {
+    background: linear-gradient(to right,
+        rgba(88, 28, 135, 0.5) 0%,
+        rgba(14, 116, 144, 0.5) 100%);
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.achievement-card {
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.achievement-card:hover {
+    transform: translateY(-5px);
+}
+
+.achievement-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.achievement-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-family: 'Orbitron', monospace;
+}
+
+.achievement-title.collector {
+    color: #67e8f9;
+}
+
+.achievement-title.master {
+    color: #ec4899;
+}
+
+.achievement-title.expert {
+    color: #fbbf24;
+}
+
+.achievement-desc {
+    color: #9ca3af;
+}
+
+/* ========================================
+   CALL TO ACTION
+======================================== */
+.cta-section {
+    text-align: center;
+}
+
+.cta-container {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.cta-card {
+    padding: 3rem;
+    border-radius: 1.5rem;
+}
+
+.cta-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    font-family: 'Orbitron', monospace;
+}
+
+.cta-subtitle {
+    font-size: 1.25rem;
+    color: #67e8f9;
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.cta-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state .gaming-card {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 3rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    font-family: 'Orbitron', monospace;
+}
+
+.empty-description {
+    color: #67e8f9;
+    margin-bottom: 2rem;
+    font-size: 1.125rem;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+======================================== */
+@media (max-width: 768px) {
+    .movies-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .achievements-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .cta-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta-title {
+        font-size: 2rem;
+    }
+
+    .movie-info {
+        padding: 1rem;
+    }
+
+    .collection-count {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .movies-grid {
+        gap: 1rem;
+    }
+
+    .gaming-card {
+        margin: 0 0.5rem;
+    }
+
+    .movie-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .rating-orb {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.75rem;
+    }
+
+    .cta-card {
+        padding: 2rem;
+    }
+
+    .empty-state .gaming-card {
+        padding: 2rem;
+    }
+}
