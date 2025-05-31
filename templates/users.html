@@ -1,58 +1,441 @@
-<!-- templates/users.html -->
 {% extends "base.html" %}
 
-{% block title %}Users - MovieWeb App{% endblock %}
+{% block title %}Player Lobby - MovieWeb Gaming{% endblock %}
+
+{% block description %}The ultimate gathering place for movie gaming champions - choose your player and start your adventure!{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-movies.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('users.add_user') }}" class="trivia-btn btn-sm">
+    ➕ RECRUIT PLAYER
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">Users</h1>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="float-up opacity-0">
+            <h1 class="hero-title gaming-font">
+                🎮 PLAYER LOBBY 🎮
+            </h1>
+            <p class="hero-subtitle">
+                Choose Your Champion & Enter the Arena
+            </p>
 
-    {% if users %}
-        <p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">
-            {{ users | length }} {{ pluralize(users | length, 'user') }} registered
-        </p>
+            <div class="hero-actions">
+                <a href="{{ url_for('trivia.global_leaderboard') }}"
+                   class="trivia-btn btn-lg pulse-btn">
+                    🏆 GLOBAL LEADERBOARD
+                </a>
+                <a href="{{ url_for('trivia.collection_leaderboard') }}"
+                   class="neon-btn btn-lg">
+                    🎯 COLLECTION CHAMPIONS
+                </a>
+                <a href="{{ url_for('users.add_user') }}"
+                   class="neon-btn btn-lg">
+                    ➕ RECRUIT NEW PLAYER
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 
-        <ul class="item-list">
-            {% for user in users %}
-                <li class="item">
-                    <div class="item-title">{{ user.name | truncate_text(40) }}</div>
-                    <div class="item-details">{{ user.email | truncate_text(50) }}</div>
-                    <div class="item-actions">
-                        <a href="/users/{{ user.id }}" class="btn btn-primary">View Movies</a>
-                        <a href="/users/{{ user.id }}/add_movie" class="btn btn-success">Add Movie</a>
-                        <a href="{{ url_for('trivia.user_trivia_stats', user_id=user.id) }}"
-                           class="btn btn-secondary">📊 Stats</a>
+<!-- Players Section -->
+<section class="section">
+    <div class="section-container">
+        {% if users %}
+            <!-- Stats Bar -->
+            <div class="stats-bar" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border: 2px solid #3b82f6; border-radius: 1rem; padding: 1.5rem; margin-bottom: 3rem; text-align: center;">
+                <h2 class="section-title gaming-font" style="margin-bottom: 1rem;">
+                    🌟 GAMING COMMUNITY STATS 🌟
+                </h2>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                    <div class="score-counter">
+                        <div style="font-size: 3rem; font-weight: bold; color: #3b82f6; margin-bottom: 0.5rem;">{{ users | length }}</div>
+                        <div style="color: #94a3b8; font-family: 'Orbitron', monospace; text-transform: uppercase;">Active {{ pluralize(users | length, 'Player') }}</div>
                     </div>
-                </li>
-            {% endfor %}
-        </ul>
-
-        <!-- Quick Stats -->
-        <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
-            <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎬 MovieWeb Community</h3>
-            <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #3498db;">{{ users | length }}</div>
-                    <div style="color: #7f8c8d;">{{ pluralize(users | length, 'User') }}</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #27ae60;">🎯</div>
-                    <div style="color: #7f8c8d;">Trivia Ready</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold; color: #e74c3c;">🏆</div>
-                    <div style="color: #7f8c8d;">
-                        <a href="{{ url_for('trivia.global_leaderboard') }}"
-                           style="color: #7f8c8d; text-decoration: none;">View Leaderboard</a>
+                    <div class="score-counter">
+                        <div style="font-size: 3rem; font-weight: bold; color: #10b981; margin-bottom: 0.5rem;">🎯</div>
+                        <div style="color: #94a3b8; font-family: 'Orbitron', monospace; text-transform: uppercase;">Battles Ready</div>
+                    </div>
+                    <div class="score-counter">
+                        <div style="font-size: 3rem; font-weight: bold; color: #fbbf24; margin-bottom: 0.5rem;">🏆</div>
+                        <div style="color: #94a3b8; font-family: 'Orbitron', monospace; text-transform: uppercase;">Champions Crowned</div>
+                    </div>
+                    <div class="score-counter">
+                        <div style="font-size: 3rem; font-weight: bold; color: #ec4899; margin-bottom: 0.5rem;">🎬</div>
+                        <div style="color: #94a3b8; font-family: 'Orbitron', monospace; text-transform: uppercase;">Movies Collected</div>
                     </div>
                 </div>
             </div>
+
+            <h2 class="section-title gaming-font">
+                👥 SELECT YOUR CHAMPION 👥
+            </h2>
+
+            <!-- Players Grid -->
+            <div class="players-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;">
+                {% for user in users %}
+                <div class="gaming-card player-card float-up opacity-0" style="transition: all 0.3s ease;">
+                    <!-- Player Header -->
+                    <div class="player-header" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 1.5rem; border-radius: 1rem 1rem 0 0; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: url('data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><circle cx=\'50\' cy=\'50\' r=\'40\' fill=\'none\' stroke=\'rgba(255,255,255,0.1)\' stroke-width=\'2\'/></svg>'); opacity: 0.3;"></div>
+                        <div style="position: relative; z-index: 1;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="background: linear-gradient(45deg, #fbbf24, #f59e0b); width: 3rem; height: 3rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #000; font-weight: bold;">🎮</div>
+                                <div style="color: #67e8f9; font-family: 'Orbitron', monospace; font-size: 0.875rem; text-transform: uppercase;">Player #{{ loop.index }}</div>
+                            </div>
+                            <h3 class="player-name gaming-font" style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem; text-transform: uppercase;">
+                                {{ user.name | truncate_text(20) }}
+                            </h3>
+                            <p style="color: #94a3b8; font-size: 0.875rem; opacity: 0.8;">{{ user.email | truncate_text(30) }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Player Stats -->
+                    <div class="player-stats" style="padding: 1.5rem; background: linear-gradient(145deg, #0f172a, #1e1b4b);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="text-align: center; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 0.5rem; border: 1px solid #3b82f6;">
+                                <div style="font-size: 1.5rem; color: #3b82f6; margin-bottom: 0.25rem;">🎬</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Collection</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem; border: 1px solid #10b981;">
+                                <div style="font-size: 1.5rem; color: #10b981; margin-bottom: 0.25rem;">🧠</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Trivia Ready</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="player-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <a href="{{ url_for('movies.user_movies', user_id=user.id) }}"
+                               class="trivia-btn" style="text-align: center; padding: 0.75rem; text-decoration: none;">
+                                🏟️ ENTER ARENA
+                            </a>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <a href="{{ url_for('movies.add_movie', user_id=user.id) }}"
+                                   class="neon-btn btn-sm" style="text-align: center; text-decoration: none;">
+                                    ➕ ADD MOVIE
+                                </a>
+                                <a href="{{ url_for('trivia.user_trivia_stats', user_id=user.id) }}"
+                                   class="neon-btn btn-sm" style="text-align: center; text-decoration: none;">
+                                    📊 STATS
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Player Rank Badge -->
+                    <div style="position: absolute; top: -10px; right: 1rem; background: linear-gradient(45deg, #fbbf24, #f59e0b); color: #000; padding: 0.5rem 1rem; border-radius: 1rem; font-weight: bold; font-size: 0.75rem; font-family: 'Orbitron', monospace; text-transform: uppercase; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);">
+                        {% if loop.index == 1 %}
+                            👑 FIRST
+                        {% elif loop.index <= 3 %}
+                            ⭐ TOP 3
+                        {% elif loop.index <= 5 %}
+                            🏅 TOP 5
+                        {% else %}
+                            🎯 ACTIVE
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="gaming-card" style="max-width: 600px; margin: 0 auto; padding: 4rem; text-align: center;">
+                    <div style="font-size: 5rem; margin-bottom: 2rem; opacity: 0.7;">🎮</div>
+                    <h3 class="gaming-font" style="font-size: 2rem; margin-bottom: 1rem; color: #fff;">
+                        LOBBY IS EMPTY!
+                    </h3>
+                    <p style="color: #67e8f9; margin-bottom: 2rem; font-size: 1.125rem; line-height: 1.6;">
+                        The gaming arena awaits its first champions! Be the pioneer who starts this epic movie gaming adventure.
+                    </p>
+                    <a href="{{ url_for('users.add_user') }}"
+                       class="trivia-btn btn-xl pulse-btn">
+                        🚀 RECRUIT FIRST PLAYER
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="section cta-section">
+    <div class="cta-container">
+        <div class="gaming-card cta-card">
+            <h3 class="cta-title gaming-font neon-text" data-typewriter="false">
+                READY TO EXPAND THE EMPIRE?
+            </h3>
+            <p class="cta-subtitle">
+                🎮 More players mean more epic battles and legendary competitions! 🎮
+            </p>
+
+            <div class="cta-actions">
+                <a href="{{ url_for('users.add_user') }}"
+                   class="trivia-btn btn-xl pulse-btn">
+                    ➕ RECRUIT NEW CHAMPION
+                </a>
+
+                <a href="{{ url_for('trivia.global_leaderboard') }}"
+                   class="neon-btn btn-lg">
+                    🏆 VIEW HALL OF FAME
+                </a>
+            </div>
         </div>
-    {% else %}
-        <div class="no-items">
-            <p>No users found.</p>
-            <a href="/add_user" class="btn btn-primary">Add First User</a>
-        </div>
-    {% endif %}
-</div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate player cards entrance
+        const playerCards = document.querySelectorAll('.player-card');
+
+        playerCards.forEach((card, index) => {
+            // Staggered entrance animation
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) rotateY(0deg)';
+            }, index * 150);
+
+            // Add interactive hover effects
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+
+                // Add glow effect
+                const colors = ['#3b82f6', '#10b981', '#fbbf24', '#ec4899'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                this.style.boxShadow = `0 20px 40px ${randomColor}40, 0 0 20px ${randomColor}60`;
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+                this.style.boxShadow = '';
+            });
+        });
+
+        // Animate stats bar
+        const statsBar = document.querySelector('.stats-bar');
+        if (statsBar) {
+            setTimeout(() => {
+                statsBar.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    statsBar.style.transform = 'scale(1)';
+                }, 200);
+            }, 1000);
+        }
+
+        // Add dynamic glow to player lobby title
+        const lobbyTitle = document.querySelector('.hero-title');
+        if (lobbyTitle) {
+            setInterval(() => {
+                const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#fbbf24'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                lobbyTitle.style.textShadow = `0 0 30px ${randomColor}`;
+
+                setTimeout(() => {
+                    lobbyTitle.style.textShadow = '';
+                }, 2000);
+            }, 8000);
+        }
+
+        // Player rank badge animations
+        const rankBadges = document.querySelectorAll('.player-card [style*="position: absolute"]');
+        rankBadges.forEach(badge => {
+            badge.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1) rotate(5deg)';
+            });
+
+            badge.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+
+        // Community stats counter animation
+        const statNumbers = document.querySelectorAll('.score-counter div[style*="font-size: 3rem"]');
+        statNumbers.forEach(stat => {
+            if (stat.textContent.match(/^\d+$/)) {
+                const finalNumber = parseInt(stat.textContent);
+                let currentNumber = 0;
+                const increment = Math.max(1, Math.ceil(finalNumber / 20));
+
+                const timer = setInterval(() => {
+                    currentNumber += increment;
+                    if (currentNumber >= finalNumber) {
+                        currentNumber = finalNumber;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = currentNumber;
+                }, 100);
+            }
+        });
+
+        // Action button sound effects (placeholder)
+        const actionButtons = document.querySelectorAll('.trivia-btn, .neon-btn');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Add click animation
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+
+                // Could add sound effect here
+                console.log('Button clicked:', this.textContent);
+            });
+        });
+
+        // Add particle effects for first player badge
+        const firstPlayerBadge = document.querySelector('.player-card:first-child [style*="👑 FIRST"]');
+        if (firstPlayerBadge) {
+            setInterval(() => {
+                // Create sparkle effect
+                for (let i = 0; i < 3; i++) {
+                    const sparkle = document.createElement('div');
+                    sparkle.style.position = 'absolute';
+                    sparkle.style.top = '50%';
+                    sparkle.style.left = '50%';
+                    sparkle.style.width = '4px';
+                    sparkle.style.height = '4px';
+                    sparkle.style.background = '#ffd700';
+                    sparkle.style.borderRadius = '50%';
+                    sparkle.style.pointerEvents = 'none';
+                    sparkle.style.zIndex = '1000';
+
+                    firstPlayerBadge.style.position = 'relative';
+                    firstPlayerBadge.appendChild(sparkle);
+
+                    // Animate sparkle
+                    sparkle.animate([
+                        {
+                            transform: 'translate(-50%, -50%) scale(0)',
+                            opacity: 1
+                        },
+                        {
+                            transform: `translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 - 20}px) scale(1)`,
+                            opacity: 0
+                        }
+                    ], {
+                        duration: 1000,
+                        easing: 'ease-out'
+                    }).onfinish = () => sparkle.remove();
+                }
+            }, 3000);
+        }
+
+        // Gaming atmosphere background effects
+        function createFloatingElements() {
+            const symbols = ['🎬', '🎮', '🏆', '⭐', '🎯'];
+
+            for (let i = 0; i < 3; i++) {
+                const element = document.createElement('div');
+                element.style.position = 'fixed';
+                element.style.left = Math.random() * 100 + 'vw';
+                element.style.top = '100vh';
+                element.style.fontSize = '2rem';
+                element.style.opacity = '0.1';
+                element.style.pointerEvents = 'none';
+                element.style.zIndex = '1';
+                element.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+
+                document.body.appendChild(element);
+
+                // Animate upward
+                element.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 0.1 },
+                    { transform: 'translateY(-100vh) rotate(360deg)', opacity: 0 }
+                ], {
+                    duration: 15000 + Math.random() * 10000,
+                    easing: 'linear'
+                }).onfinish = () => element.remove();
+            }
+        }
+
+        // Start background animation
+        setInterval(createFloatingElements, 8000);
+
+        // Konami code easter egg for admin mode
+        let konamiCode = [];
+        const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]; // ↑↑↓↓←→←→BA
+
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.keyCode);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                // Admin mode activated!
+                document.body.style.filter = 'hue-rotate(180deg) saturate(150%)';
+
+                // Add admin badges to all players
+                playerCards.forEach(card => {
+                    const adminBadge = document.createElement('div');
+                    adminBadge.textContent = '👑 ADMIN MODE';
+                    adminBadge.style.cssText = `
+                        position: absolute;
+                        top: -15px;
+                        left: 1rem;
+                        background: linear-gradient(45deg, #ff006e, #8338ec);
+                        color: white;
+                        padding: 0.5rem 1rem;
+                        border-radius: 1rem;
+                        font-weight: bold;
+                        font-size: 0.75rem;
+                        font-family: 'Orbitron', monospace;
+                        text-transform: uppercase;
+                        box-shadow: 0 4px 15px rgba(255, 0, 110, 0.4);
+                        z-index: 1000;
+                    `;
+                    card.appendChild(adminBadge);
+                });
+
+                setTimeout(() => {
+                    document.body.style.filter = '';
+                    document.querySelectorAll('[style*="ADMIN MODE"]').forEach(badge => badge.remove());
+                }, 5000);
+
+                console.log('🎮 ADMIN MODE ACTIVATED! 🎮');
+            }
+        });
+
+        // Auto-refresh player count (optional feature)
+        setInterval(() => {
+            // Could implement real-time player count updates here
+            console.log('Player lobby heartbeat');
+        }, 60000);
+
+        // Add tooltips to action buttons
+        actionButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                const buttonText = this.textContent.trim();
+                let tooltipText = '';
+
+                if (buttonText.includes('ENTER ARENA')) {
+                    tooltipText = 'Access this player\'s movie collection and start battles!';
+                } else if (buttonText.includes('ADD MOVIE')) {
+                    tooltipText = 'Help this player expand their movie collection!';
+                } else if (buttonText.includes('STATS')) {
+                    tooltipText = 'View this player\'s trivia performance and achievements!';
+                } else if (buttonText.includes('RECRUIT')) {
+                    tooltipText = 'Add a new player to the gaming community!';
+                }
+
+                if (tooltipText) {
+                    // Could implement actual tooltip here
+                    console.log('Tooltip:', tooltipText);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

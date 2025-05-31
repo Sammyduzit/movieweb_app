@@ -1,52 +1,241 @@
-<!-- templates/trivia_question.html -->
 {% extends "base.html" %}
 
 {% block title %}
-{% if trivia_type == 'movie' %}Movie Trivia{% else %}Collection Trivia{% endif %} - Question {{ progress.current }} - MovieWeb App
+{% if trivia_type == 'movie' %}Movie Battle{% else %}Collection Battle{% endif %} - Question {{ progress.current }} - MovieWeb Gaming
+{% endblock %}
+
+{% block description %}
+Challenge yourself with movie trivia questions in our gaming battle arena!
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('trivia.trivia_quit') }}"
+   class="quit-battle-btn"
+   onclick="return confirm('🚪 Are you sure you want to quit the battle?')">
+    🚪 QUIT BATTLE
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-trivia.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Progress Bar -->
-    <div class="trivia-progress">
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: {{ progress.percentage }}%"></div>
-        </div>
-        <div class="progress-text">
-            Question {{ progress.current }} of {{ progress.total }} ({{ progress.percentage }}%)
-        </div>
-    </div>
+<div class="battle-arena">
+    <div class="battle-container">
+        <!-- Progress HUD -->
+        <div class="progress-hud float-up opacity-0">
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: {{ progress.percentage }}%"></div>
+            </div>
 
-    <!-- Question Card -->
-    <div class="trivia-card">
-        <div class="question-header">
-            {% set difficulty_style = get_difficulty_style(question.difficulty or 'medium') %}
-            <span class="difficulty-badge {{ difficulty_style.class }}">
-                {{ (question.difficulty or 'medium') | title }}
-            </span>
+            <!-- Progress Text -->
+            <div class="progress-text">
+                BATTLE PROGRESS: {{ progress.current }} / {{ progress.total }} QUESTIONS
+            </div>
+
+            <!-- Progress Stats -->
+            <div class="progress-stats">
+                <div class="current-score">
+                    🏆 SCORE: {{ session.get('trivia_session', {}).get('score', 0) }}
+                </div>
+                <div class="question-counter">
+                    {% if trivia_type == 'movie' %}
+                        🎬 MOVIE BATTLE
+                    {% else %}
+                        🎯 COLLECTION BATTLE
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <div class="question-text">
-            {{ question.question | truncate_text(300) }}
+        <!-- Question Arena -->
+        <div class="question-arena">
+            <!-- Trivia Type Badge -->
+            <div class="trivia-type-badge trivia-type-{{ trivia_type }}">
+                {% if trivia_type == 'movie' %}
+                    🎬 MOVIE
+                {% else %}
+                    🎯 COLLECTION
+                {% endif %}
+            </div>
+
+            <!-- Question Header -->
+            <div class="question-header">
+                <div class="question-number">
+                    Q{{ progress.current }}
+                </div>
+
+                {% set difficulty_style = get_difficulty_style(question.difficulty or 'medium') %}
+                <div class="difficulty-badge {{ difficulty_style.class }}">
+                    {{ (question.difficulty or 'medium') | title }}
+                </div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="question-text">
+                {{ question.question | truncate_text(300) }}
+            </div>
+
+            <!-- Answer Options -->
+            <form method="POST" action="{{ url_for('trivia.trivia_answer') }}">
+                <div class="answers-grid">
+                    {% for option in question.options %}
+                    <button type="submit" name="answer" value="{{ loop.index0 }}" class="answer-option">
+                        <div class="answer-letter">
+                            {{ 'ABCD'[loop.index0] }}
+                        </div>
+                        <div class="answer-text">
+                            {{ option | truncate_text(150) }}
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </form>
         </div>
 
-        <!-- Answer Options -->
-        <form method="POST" action="{{ url_for('trivia.trivia_answer') }}" class="trivia-form">
-            {% for option in question.options %}
-                <button type="submit" name="answer" value="{{ loop.index0 }}" class="option-button">
-                    <span class="option-letter">{{ 'ABCD'[loop.index0] }}</span>
-                    <span class="option-text">{{ option | truncate_text(200) }}</span>
-                </button>
-            {% endfor %}
-        </form>
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="trivia-actions">
-        <a href="{{ url_for('trivia.trivia_quit') }}" class="btn btn-secondary" 
-           onclick="return confirm('Are you sure you want to quit the trivia?')">
-            🚪 Quit Trivia
-        </a>
+        <!-- Battle Controls -->
+        <div class="battle-controls">
+            <a href="{{ url_for('trivia.trivia_quit') }}"
+               class="quit-battle-btn"
+               onclick="return confirm('🚪 Are you sure you want to quit the battle? Your progress will be lost!')">
+                🚪 QUIT BATTLE
+            </a>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Answer button effects
+        const answerButtons = document.querySelectorAll('.answer-option');
+
+        answerButtons.forEach((button, index) => {
+            // Add click sound effect placeholder
+            button.addEventListener('click', function() {
+                // Could add sound effect here
+                console.log('Answer selected:', this.querySelector('.answer-text').textContent);
+
+                // Add selection effect
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+
+            // Add keyboard navigation
+            button.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        });
+
+        // Keyboard shortcuts for answers
+        document.addEventListener('keydown', function(e) {
+            const keyMap = {
+                'a': 0, 'A': 0, '1': 0,
+                'b': 1, 'B': 1, '2': 1,
+                'c': 2, 'C': 2, '3': 2,
+                'd': 3, 'D': 3, '4': 3
+            };
+
+            if (keyMap.hasOwnProperty(e.key)) {
+                e.preventDefault();
+                const answerIndex = keyMap[e.key];
+                const button = answerButtons[answerIndex];
+                if (button) {
+                    button.click();
+                }
+            }
+        });
+
+        // Progress bar animation
+        const progressBar = document.querySelector('.progress-bar-fill');
+        if (progressBar) {
+            // Animate to current width
+            const targetWidth = progressBar.style.width;
+            progressBar.style.width = '0%';
+            setTimeout(() => {
+                progressBar.style.width = targetWidth;
+            }, 500);
+        }
+
+        // Add battle entrance animation
+        const questionArena = document.querySelector('.question-arena');
+        if (questionArena) {
+            questionArena.style.opacity = '0';
+            questionArena.style.transform = 'scale(0.8) rotateY(180deg)';
+
+            setTimeout(() => {
+                questionArena.style.transition = 'all 0.8s ease-out';
+                questionArena.style.opacity = '1';
+                questionArena.style.transform = 'scale(1) rotateY(0deg)';
+            }, 200);
+        }
+
+        // Gaming atmosphere effects
+        function addRandomGlow() {
+            const arena = document.querySelector('.question-arena');
+            if (arena) {
+                const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff006e'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                arena.style.boxShadow = `0 0 30px ${randomColor}30`;
+
+                setTimeout(() => {
+                    arena.style.boxShadow = '';
+                }, 2000);
+            }
+        }
+
+        // Add glow effect every 10 seconds
+        setInterval(addRandomGlow, 10000);
+
+        // Difficulty badge pulse effect
+        const difficultyBadge = document.querySelector('.difficulty-badge');
+        if (difficultyBadge) {
+            difficultyBadge.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+            });
+
+            difficultyBadge.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        }
+
+        // Question number pulse
+        const questionNumber = document.querySelector('.question-number');
+        if (questionNumber) {
+            setInterval(() => {
+                questionNumber.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    questionNumber.style.transform = 'scale(1)';
+                }, 200);
+            }, 3000);
+        }
+    });
+
+    // Add warning for page refresh/back (but NOT for form submissions)
+    let isSubmitting = false;
+
+    // Mark when user is submitting an answer
+    document.querySelectorAll('.answer-option').forEach(button => {
+        button.addEventListener('click', function() {
+            isSubmitting = true;
+        });
+    });
+
+    // Only warn on actual page leave, not form submission
+    window.addEventListener('beforeunload', function(e) {
+        if (!isSubmitting) {
+            const message = 'Your trivia battle progress will be lost if you leave this page!';
+            e.returnValue = message;
+            return message;
+        }
+    });
+</script>
 {% endblock %}

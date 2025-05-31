@@ -1,41 +1,547 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Movie - MovieWeb App{% endblock %}
+{% block title %}Upgrade Movie - {{ movie.title }} - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+Enhance and upgrade your movie entry with the latest data and your personal touch!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-forms.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="neon-btn btn-sm">
+    🔙 {{ user.name | truncate_text(10) }}'s Arena
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">Edit Movie: {{ movie.title }}</h1>
-    
-    <form method="POST" action="/users/{{ user.id }}/update_movie/{{ movie.id }}">
-        <div class="form-group">
-            <label for="title" class="form-label">Movie Title:</label>
-            <input type="text" id="title" name="title" class="form-input" value="{{ movie.title }}" required>
+<div class="form-arena">
+    <div class="form-container">
+        <!-- Form Header -->
+        <div class="form-header float-up opacity-0">
+            <h1 class="form-title">
+                ⚙️ Upgrade Movie
+            </h1>
+            <p class="form-subtitle">
+                Enhance "{{ movie.title | truncate_text(30) }}" in {{ user.name }}'s Collection
+            </p>
+
+            <!-- Current Movie Preview -->
+            <div class="form-instructions">
+                <div class="form-instructions-title">🎬 Current Movie Data</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div style="text-align: center;">
+                        <div style="color: #3b82f6; font-weight: bold;">Title</div>
+                        <div style="color: #e2e8f0;">{{ movie.title | truncate_text(25) }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #10b981; font-weight: bold;">Director</div>
+                        <div style="color: #e2e8f0;">{{ movie.director | truncate_text(20) or 'Unknown' }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #f59e0b; font-weight: bold;">Year</div>
+                        <div style="color: #e2e8f0;">{{ movie.year or 'Unknown' }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #8b5cf6; font-weight: bold;">Rating</div>
+                        <div style="color: #e2e8f0;">{{ movie.rating | format_rating if movie.rating else 'No rating' }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="director" class="form-label">Director:</label>
-            <input type="text" id="director" name="director" class="form-input" value="{{ movie.director }}" required>
+
+        <!-- Main Form -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('movies.update_movie', user_id=user.id, movie_id=movie.id) }}"
+                  id="updateMovieForm" class="form-grid">
+
+                <!-- Movie Title -->
+                <div class="form-field">
+                    <label for="title" class="field-label required">🎬 Movie Title</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="title"
+                               name="title"
+                               class="field-input"
+                               placeholder="Enter the movie title..."
+                               value="{{ movie.title }}"
+                               required
+                               maxlength="200"
+                               autocomplete="off">
+                        <span class="field-icon">🎬</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Primary identifier for your movie</span>
+                        <span class="field-counter" id="titleCounter">{{ movie.title | length if movie.title else 0 }}/200</span>
+                    </div>
+                </div>
+
+                <!-- Director -->
+                <div class="form-field">
+                    <label for="director" class="field-label">🎭 Director</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="director"
+                               name="director"
+                               class="field-input"
+                               placeholder="Director name"
+                               value="{{ movie.director or '' }}"
+                               maxlength="100">
+                        <span class="field-icon">🎭</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">The mastermind behind the movie</span>
+                        <span class="field-counter" id="directorCounter">{{ movie.director | length if movie.director else 0 }}/100</span>
+                    </div>
+                </div>
+
+                <!-- Year -->
+                <div class="form-field">
+                    <label for="year" class="field-label">📅 Release Year</label>
+                    <div class="field-with-icon year-field">
+                        <input type="number"
+                               id="year"
+                               name="year"
+                               class="field-input"
+                               placeholder="YYYY"
+                               value="{{ movie.year or '' }}"
+                               min="1800"
+                               max="2030"
+                               step="1">
+                        <span class="field-icon">📅</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Between 1800 and 2030</span>
+                    </div>
+                </div>
+
+                <!-- Genre -->
+                <div class="form-field">
+                    <label for="genre" class="field-label">🎪 Genre</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="genre"
+                               name="genre"
+                               class="field-input"
+                               placeholder="e.g., Action, Drama, Sci-Fi"
+                               value="{{ movie.genre or '' }}"
+                               maxlength="100">
+                        <span class="field-icon">🎪</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Movie category or style</span>
+                        <span class="field-counter" id="genreCounter">{{ movie.genre | length if movie.genre else 0 }}/100</span>
+                    </div>
+                </div>
+
+                <!-- Personal Rating -->
+                <div class="form-field">
+                    <label for="rating" class="field-label">⭐ Your Personal Rating</label>
+                    <div class="field-with-icon rating-field">
+                        <input type="number"
+                               id="rating"
+                               name="rating"
+                               class="field-input"
+                               placeholder="Rate 1-10"
+                               value="{{ movie.rating or '' }}"
+                               min="1"
+                               max="10"
+                               step="0.1">
+                        <span class="rating-display" id="ratingDisplay">
+                            {% if movie.rating %}
+                                {% set rating_val = movie.rating | float %}
+                                {% if rating_val >= 9 %}🔥
+                                {% elif rating_val >= 8 %}⭐
+                                {% elif rating_val >= 7 %}👍
+                                {% elif rating_val >= 6 %}👌
+                                {% elif rating_val >= 5 %}😐
+                                {% elif rating_val >= 3 %}👎
+                                {% else %}💀
+                                {% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Your personal score (1-10)</span>
+                    </div>
+                </div>
+
+                <!-- Movie Status Indicator -->
+                <div class="api-indicator">
+                    <div class="api-icon">🔄</div>
+                    <div class="api-text">
+                        Upgrading movie data while preserving your personal customizations and ratings.
+                        Changes will be reflected immediately in your collection.
+                    </div>
+                    <div class="api-status">Upgrading</div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        🚀 Upgrade Movie
+                    </button>
+                    <a href="{{ url_for('movies.user_movies', user_id=user.id) }}"
+                       class="cancel-button">
+                        <span>❌</span>
+                        <span>Cancel</span>
+                    </a>
+                </div>
+            </form>
         </div>
-        
-        <div class="form-group">
-            <label for="year" class="form-label">Year:</label>
-            <input type="number" id="year" name="year" class="form-input" value="{{ movie.year }}" min="1900" max="2030" required>
+
+        <!-- Movie Poster Preview (if available) -->
+        {% if movie.poster and get_poster_url(movie.poster) %}
+        <div style="text-align: center; margin-top: 2rem;">
+            <h3 style="color: #fbbf24; font-family: 'Orbitron', monospace; margin-bottom: 1rem;">
+                🖼️ CURRENT POSTER
+            </h3>
+            <div style="display: inline-block; border-radius: 1rem; overflow: hidden; border: 3px solid #3b82f6; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);">
+                <img src="{{ get_poster_url(movie.poster) }}"
+                     alt="{{ movie.title }} poster"
+                     style="width: 200px; height: 300px; object-fit: cover; display: block;">
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="genre" class="form-label">Genre:</label>
-            <input type="text" id="genre" name="genre" class="form-input" value="{{ movie.genre or '' }}">
-        </div>
-        
-        <div class="form-group">
-            <label for="rating" class="form-label">Your Rating (1-10):</label>
-            <input type="number" id="rating" name="rating" class="form-input" value="{{ movie.rating or '' }}" min="1" max="10" step="0.1">
-        </div>
-        
-        <div class="form-group" style="text-align: center;">
-            <button type="submit" class="btn btn-success">Update Movie</button>
-            <a href="/users/{{ user.id }}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
+        {% endif %}
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('updateMovieForm');
+        const titleInput = document.getElementById('title');
+        const directorInput = document.getElementById('director');
+        const yearInput = document.getElementById('year');
+        const genreInput = document.getElementById('genre');
+        const ratingInput = document.getElementById('rating');
+        const submitButton = document.querySelector('.submit-button');
+
+        // Character counters
+        function setupCharCounter(input, counterId, maxLength) {
+            const counter = document.getElementById(counterId);
+            if (input && counter) {
+                input.addEventListener('input', function() {
+                    const length = this.value.length;
+                    counter.textContent = `${length}/${maxLength}`;
+
+                    if (length > maxLength * 0.9) {
+                        counter.className = 'field-counter danger';
+                    } else if (length > maxLength * 0.7) {
+                        counter.className = 'field-counter warning';
+                    } else {
+                        counter.className = 'field-counter';
+                    }
+                });
+            }
+        }
+
+        setupCharCounter(titleInput, 'titleCounter', 200);
+        setupCharCounter(directorInput, 'directorCounter', 100);
+        setupCharCounter(genreInput, 'genreCounter', 100);
+
+        // Rating visual feedback
+        if (ratingInput) {
+            const ratingDisplay = document.getElementById('ratingDisplay');
+
+            ratingInput.addEventListener('input', function() {
+                const value = parseFloat(this.value);
+
+                if (isNaN(value) || value < 1 || value > 10) {
+                    ratingDisplay.textContent = '';
+                    ratingDisplay.className = 'rating-display';
+                    return;
+                }
+
+                let emoji = '';
+                let className = 'rating-display';
+
+                if (value >= 9) {
+                    emoji = '🔥';
+                    className += ' rating-10';
+                } else if (value >= 8) {
+                    emoji = '⭐';
+                    className += ' rating-8';
+                } else if (value >= 7) {
+                    emoji = '👍';
+                    className += ' rating-7';
+                } else if (value >= 6) {
+                    emoji = '👌';
+                    className += ' rating-6';
+                } else if (value >= 5) {
+                    emoji = '😐';
+                    className += ' rating-5';
+                } else if (value >= 3) {
+                    emoji = '👎';
+                    className += ' rating-3';
+                } else {
+                    emoji = '💀';
+                    className += ' rating-1';
+                }
+
+                ratingDisplay.textContent = emoji;
+                ratingDisplay.className = className;
+            });
+        }
+
+        // Form validation enhancements
+        function validateField(input, validationFn, errorMessage) {
+            if (!input) return true;
+
+            const isValid = validationFn(input.value);
+
+            if (isValid) {
+                input.style.borderColor = '#10b981';
+                input.style.backgroundColor = '';
+            } else {
+                input.style.borderColor = '#ef4444';
+                input.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            }
+
+            return isValid;
+        }
+
+        // Title validation
+        if (titleInput) {
+            titleInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => value.trim().length >= 1,
+                    'Movie title is required'
+                );
+            });
+        }
+
+        // Year validation
+        if (yearInput) {
+            yearInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => !value || (parseInt(value) >= 1800 && parseInt(value) <= 2030),
+                    'Year must be between 1800 and 2030'
+                );
+            });
+        }
+
+        // Rating validation
+        if (ratingInput) {
+            ratingInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => !value || (parseFloat(value) >= 1 && parseFloat(value) <= 10),
+                    'Rating must be between 1 and 10'
+                );
+            });
+        }
+
+        // Change detection
+        const originalValues = {
+            title: titleInput?.value || '',
+            director: directorInput?.value || '',
+            year: yearInput?.value || '',
+            genre: genreInput?.value || '',
+            rating: ratingInput?.value || ''
+        };
+
+        function hasChanges() {
+            return (
+                (titleInput?.value || '') !== originalValues.title ||
+                (directorInput?.value || '') !== originalValues.director ||
+                (yearInput?.value || '') !== originalValues.year ||
+                (genreInput?.value || '') !== originalValues.genre ||
+                (ratingInput?.value || '') !== originalValues.rating
+            );
+        }
+
+        // Update submit button based on changes
+        function updateSubmitButton() {
+            if (hasChanges()) {
+                submitButton.style.background = 'linear-gradient(45deg, #10b981, #059669, #10b981)';
+                submitButton.textContent = '🚀 Save Upgrades';
+            } else {
+                submitButton.style.background = 'linear-gradient(45deg, #6b7280, #4b5563)';
+                submitButton.textContent = '🔄 No Changes';
+            }
+        }
+
+        // Monitor for changes
+        [titleInput, directorInput, yearInput, genreInput, ratingInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', updateSubmitButton);
+            }
+        });
+
+        // Form submission handling
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Validate all fields
+                let isValid = true;
+
+                if (titleInput && !titleInput.value.trim()) {
+                    isValid = false;
+                    titleInput.focus();
+                    titleInput.style.borderColor = '#ef4444';
+                    titleInput.style.animation = 'validationError 0.5s ease';
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('🎮 Please enter at least a movie title to continue!');
+                    return false;
+                }
+
+                if (!hasChanges()) {
+                    e.preventDefault();
+                    alert('🎯 No changes detected! Modify some fields to upgrade the movie.');
+                    return false;
+                }
+
+                // Add loading state
+                if (submitButton) {
+                    submitButton.textContent = '🚀 Upgrading Movie...';
+                    submitButton.disabled = true;
+                    form.classList.add('form-loading');
+                }
+
+                // Show success message (will be replaced by page redirect)
+                setTimeout(() => {
+                    form.classList.add('form-success');
+                }, 100);
+            });
+        }
+
+        // Gaming atmosphere effects
+        function addFormGlow() {
+            const formCard = document.querySelector('.form-card');
+            if (formCard) {
+                const colors = ['#3b82f6', '#8b5cf6', '#10b981'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                formCard.style.boxShadow = `0 0 50px ${randomColor}40`;
+
+                setTimeout(() => {
+                    formCard.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+
+        // Add glow effect every 12 seconds
+        setInterval(addFormGlow, 12000);
+
+        // Input field gaming effects
+        const inputs = document.querySelectorAll('.field-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'scale(1.02)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Confetti for perfect ratings
+        function createConfetti() {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#ffd700'];
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '6px';
+                confetti.style.height = '6px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 50}px) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 2500 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Trigger confetti for perfect ratings
+        if (ratingInput) {
+            ratingInput.addEventListener('change', function() {
+                if (parseFloat(this.value) === 10) {
+                    setTimeout(createConfetti, 200);
+                }
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Alt + S = Submit form
+            if (e.altKey && e.key === 's') {
+                e.preventDefault();
+                if (submitButton && !submitButton.disabled) {
+                    submitButton.click();
+                }
+            }
+
+            // Escape = Cancel
+            if (e.key === 'Escape') {
+                const cancelButton = document.querySelector('.cancel-button');
+                if (cancelButton) {
+                    if (hasChanges()) {
+                        if (confirm('🚪 You have unsaved changes. Are you sure you want to cancel?')) {
+                            window.location.href = cancelButton.href;
+                        }
+                    } else {
+                        window.location.href = cancelButton.href;
+                    }
+                }
+            }
+        });
+
+        // Success animation on submit
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                document.body.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+                setTimeout(() => {
+                    document.body.style.background = '';
+                }, 1000);
+            }, 100);
+        });
+
+        // Initialize submit button state
+        updateSubmitButton();
+
+        // Auto-save to localStorage (optional)
+        function saveFormData() {
+            const formData = {
+                title: titleInput?.value || '',
+                director: directorInput?.value || '',
+                year: yearInput?.value || '',
+                genre: genreInput?.value || '',
+                rating: ratingInput?.value || ''
+            };
+            localStorage.setItem(`updateMovieForm_${window.location.pathname}`, JSON.stringify(formData));
+        }
+
+        // Save form data on input
+        inputs.forEach(input => {
+            input.addEventListener('input', saveFormData);
+        });
+
+        // Poster hover effect
+        const poster = document.querySelector('img[alt*="poster"]');
+        if (poster) {
+            poster.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05) rotateY(5deg)';
+                this.style.transition = 'transform 0.3s ease';
+            });
+
+            poster.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotateY(0deg)';
+            });
+        }
+    });
+</script>
 {% endblock %}

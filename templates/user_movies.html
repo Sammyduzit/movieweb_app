@@ -1,68 +1,312 @@
-<!-- templates/user_movies.html -->
 {% extends "base.html" %}
 
-{% block title %}{{ user.name }}'s Movies - MovieWeb App{% endblock %}
+{% block title %}{{ user.name }}'s Arena - MovieWeb Gaming{% endblock %}
+
+{% block description %}{{ user.name }}'s movie collection on MovieWeb Gaming Platform - Play trivia and challenge your movie knowledge!{% endblock %}
+
+{% block og_title %}{{ user.name }}'s Movie Arena{% endblock %}
+{% block og_description %}Check out {{ user.name }}'s amazing movie collection and trivia achievements!{% endblock %}
+
+{% block nav_extra %}
+<!-- User-specific navigation items -->
+<p style="color: #fbbf24;"><b>{{ user.name | truncate_text(15) }}'S ARENA</b></p>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-movies.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.add_movie', user_id=user.id) }}" class="trivia-btn btn-sm">
+    ➕ ADD MOVIE
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">{{ user.name | truncate_text(30) }}'s Favorite Movies</h1>
-
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <a href="{{ url_for('trivia.collection_trivia', user_id=user.id) }}"
-           class="btn btn-primary trivia-btn">🎯 Collection Trivia (21 Questions)</a>
-        <a href="{{ url_for('trivia.user_trivia_stats', user_id=user.id) }}"
-           class="btn btn-secondary">📊 My Stats</a>
-        <a href="/users/{{ user.id }}/add_movie" class="btn btn-success">Add New Movie</a>
-        <a href="/users" class="btn btn-secondary">Back to Users</a>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="float-up opacity-0">
+            <h1 class="hero-title gaming-font">
+                {{ user.name | upper }}'S ARENA
+            </h1>
+            <p class="hero-subtitle">
+                🎮 LEVEL UP YOUR MOVIE GAME 🎮
+            </p>
+            
+            <div class="hero-actions">
+                <a href="{{ url_for('trivia.collection_trivia', user_id=user.id) }}" 
+                   class="trivia-btn btn-lg pulse-btn">
+                    🎯 COLLECTION TRIVIA
+                </a>
+                <a href="{{ url_for('trivia.user_trivia_stats', user_id=user.id) }}" 
+                   class="neon-btn btn-lg">
+                    📊 MY STATS
+                </a>
+                <a href="{{ url_for('movies.add_movie', user_id=user.id) }}" 
+                   class="neon-btn btn-lg">
+                    ➕ ADD MOVIE
+                </a>
+            </div>
+            
+            <div class="collection-stats">
+                <div class="score-counter">
+                    <p class="gaming-font text-cyan">
+                        COLLECTION SIZE: 
+                        <span class="collection-count">{{ movies | length }}</span> 
+                        {{ pluralize(movies | length, 'MOVIE', 'MOVIES') }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
+</section>
 
-    {% if movies %}
-        <p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">
-            {{ movies | length }} {{ pluralize(movies | length, 'movie', 'movies') }} in collection
-        </p>
-
-        <ul class="item-list">
-            {% for movie in movies %}
-                <li class="item">
-                    <div class="movie-content">
-                        <div class="movie-poster">
+<!-- Movies Collection -->
+<section class="section">
+    <div class="section-container">
+        <h2 class="section-title gaming-font">
+            🎬 MOVIE COLLECTION 🎬
+        </h2>
+        
+        {% if movies %}
+            <div class="movies-grid">
+                {% for movie in movies %}
+                <div class="gaming-card movie-card float-up opacity-0">
+                    <div class="movie-poster">
+                        <a href="{{ url_for('movies.movie_detail', user_id=user.id, movie_id=movie.id) }}"
+                           class="poster-link"
+                           title="View {{ movie.title }} Details">
                             {% set poster = get_poster_url(movie.poster) %}
                             {% if poster %}
-                                <img src="{{ poster }}" alt="{{ movie.title }} poster" class="poster-image">
+                                <img src="{{ poster }}" alt="{{ movie.title }} poster">
                             {% else %}
-                                <div class="no-poster">No Poster</div>
+                                <div style="width: 100%; height: 16rem; background: linear-gradient(135deg, #1a1a2e, #16213e); display: flex; align-items: center; justify-content: center; color: #666;">
+                                    <span class="gaming-font">NO POSTER</span>
+                                </div>
+                            {% endif %}
+                        </a>
+                        <!-- Rating Orb -->
+                        {% if movie.rating %}
+                        <div class="rating-orb">
+                            {{ movie.rating | format_rating | replace('/10', '') }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Movie Status -->
+                        <div class="movie-status">
+                            {% set rating_num = movie.rating | float if movie.rating else 0 %}
+                            {% if rating_num >= 9.0 %}
+                                <div class="movie-status-text status-legendary">🏆 LEGENDARY TIER</div>
+                            {% elif rating_num >= 8.5 %}
+                                <div class="movie-status-text status-potential">✨ HIGH SCORE POTENTIAL</div>
+                            {% elif rating_num >= 8.0 %}
+                                <div class="movie-status-text status-epic">🚀 EPIC ADVENTURE</div>
+                            {% else %}
+                                <div class="movie-status-text status-ready">⚡ READY FOR TRIVIA</div>
                             {% endif %}
                         </div>
+                    </div>
+                    
+                    <div class="movie-info">
+                        <h3 class="movie-title gaming-font">
+                            {{ movie.title | upper | truncate_text(25) }}
+                        </h3>
+                        <p class="movie-meta">
+                            {{ movie.director | truncate_text(20) or 'UNKNOWN DIRECTOR' }} • {{ movie.year or 'UNKNOWN' }}
+                        </p>
+                        <p class="movie-genre">
+                            {{ movie.genre | upper | truncate_text(20) or 'UNCLASSIFIED' }}
+                        </p>
 
-                        <div class="movie-info">
-                            <div class="item-title">
-                                <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="movie-title-link">
-                                    {{ movie.title | truncate_text(60) }} ({{ movie.year or 'Unknown' }})
-                                </a>
-                            </div>
-                            <div class="item-details">
-                                <strong>Director:</strong> {{ movie.director | truncate_text(40) or 'Unknown' }}<br>
-                                {% if movie.genre %}<strong>Genre:</strong> {{ movie.genre | truncate_text(30) }}<br>{% endif %}
-                                {% if movie.rating %}<strong>Rating:</strong> {{ movie.rating | format_rating }}{% endif %}
-                            </div>
-                            <div class="item-actions">
-                                <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}"
-                                   class="btn btn-primary btn-small trivia-btn">🧠 Trivia</a>
-                                <a href="/users/{{ user.id }}/update_movie/{{ movie.id }}" class="btn btn-warning">Edit</a>
-                                <a href="/users/{{ user.id }}/delete_movie/{{ movie.id }}"
-                                   class="btn btn-danger"
-                                   onclick="return confirm('Are you sure you want to delete this movie?')">Delete</a>
-                            </div>
+                        <div class="movie-actions">
+                            <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}" 
+                               class="trivia-btn">
+                                🧠 BATTLE
+                            </a>
+                            <a href="{{ url_for('movies.movie_detail', user_id=user.id, movie_id=movie.id) }}" 
+                               class="neon-btn"
+                               title="View Movie Details">
+                                👁️
+                            </a>
+                            <a href="{{ url_for('movies.update_movie', user_id=user.id, movie_id=movie.id) }}" 
+                               class="neon-btn"
+                               title="Edit Movie">
+                                ⚙️
+                            </a>
                         </div>
                     </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <div class="no-items">
-            <p>{{ user.name | truncate_text(20) }} hasn't added any movies yet.</p>
-            <a href="/users/{{ user.id }}/add_movie" class="btn btn-primary">Add First Movie</a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center" style="padding: 4rem 2rem;">
+                <div class="gaming-card" style="max-width: 600px; margin: 0 auto; padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎬</div>
+                    <h3 class="gaming-font text-2xl font-bold mb-4 text-gradient-primary">
+                        ARENA IS EMPTY!
+                    </h3>
+                    <p class="text-cyan mb-6 text-lg">
+                        {{ user.name }} hasn't added any movies yet. Time to build an epic collection!
+                    </p>
+                    <a href="{{ url_for('movies.add_movie', user_id=user.id) }}" 
+                       class="trivia-btn btn-lg pulse-btn">
+                        🚀 ADD FIRST MOVIE
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Achievements Section -->
+{% if movies %}
+<section class="section achievement-section">
+    <div class="section-container">
+        <div class="text-center">
+            <h2 class="section-title gaming-font text-yellow">
+                🏅 ACHIEVEMENTS UNLOCKED 🏅
+            </h2>
+            
+            <div class="achievements-grid">
+                <div class="score-counter achievement-card">
+                    <div class="achievement-icon">🎬</div>
+                    <div class="achievement-title collector gaming-font">
+                        MOVIE COLLECTOR
+                    </div>
+                    <div class="achievement-desc">
+                        {{ movies | length }}+ Movies Added
+                    </div>
+                </div>
+                
+                <div class="score-counter achievement-card">
+                    <div class="achievement-icon">🧠</div>
+                    <div class="achievement-title master gaming-font">
+                        TRIVIA MASTER
+                    </div>
+                    <div class="achievement-desc">
+                        Ready for Challenge
+                    </div>
+                </div>
+                
+                <div class="score-counter achievement-card">
+                    <div class="achievement-icon">⭐</div>
+                    <div class="achievement-title expert gaming-font">
+                        RATING EXPERT
+                    </div>
+                    <div class="achievement-desc">
+                        Quality Curator
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
-</div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action -->
+<section class="section cta-section">
+    <div class="cta-container">
+        <div class="gaming-card cta-card">
+            <h3 class="cta-title gaming-font neon-text" data-typewriter="false">
+                READY FOR THE ULTIMATE CHALLENGE?
+            </h3>
+            <p class="cta-subtitle">
+                🎮 Test your movie knowledge against other players! 🎮
+            </p>
+            
+            <div class="cta-actions">
+                {% if movies | length >= 3 %}
+                    <a href="{{ url_for('trivia.collection_trivia', user_id=user.id) }}" 
+                       class="trivia-btn btn-xl pulse-btn">
+                        🎯 START COLLECTION TRIVIA
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('movies.add_movie', user_id=user.id) }}" 
+                       class="trivia-btn btn-xl pulse-btn">
+                        ➕ ADD MORE MOVIES
+                    </a>
+                    <small class="text-gray" style="display: block; margin-top: 1rem;">
+                        Need {{ 3 - movies | length }} more movies for collection trivia
+                    </small>
+                {% endif %}
+                
+                <a href="{{ url_for('trivia.global_leaderboard') }}"
+                   class="neon-btn btn-lg">
+                    🏆 VIEW LEADERBOARD
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add some extra gaming effects for this page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add random glow effects to movie cards
+        const movieCards = document.querySelectorAll('.movie-card');
+        
+        movieCards.forEach((card, index) => {
+            // Staggered entrance animation
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 150);
+            
+            // Add interactive sound effect placeholder
+            card.addEventListener('click', function() {
+                // Could add sound effect here
+                console.log('Movie card clicked:', card.querySelector('.movie-title').textContent);
+            });
+        });
+        
+        // Add particle effect to collection counter (optional)
+        const collectionCounter = document.querySelector('.collection-count');
+        if (collectionCounter) {
+            collectionCounter.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.textShadow = '0 0 20px #fbbf24';
+            });
+            
+            collectionCounter.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.textShadow = '';
+            });
+        }
+        
+        // Gaming achievement unlock animation
+        const achievements = document.querySelectorAll('.achievement-card');
+        achievements.forEach((achievement, index) => {
+            setTimeout(() => {
+                achievement.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    achievement.style.transform = 'scale(1)';
+                }, 200);
+            }, 2000 + (index * 300));
+        });
+    });
+    
+    // Add konami code easter egg (optional fun feature)
+    let konamiCode = [];
+    const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]; // ↑↑↓↓←→←→BA
+    
+    document.addEventListener('keydown', function(e) {
+        konamiCode.push(e.keyCode);
+        if (konamiCode.length > konamiSequence.length) {
+            konamiCode.shift();
+        }
+        
+        if (konamiCode.join(',') === konamiSequence.join(',')) {
+            // Easter egg activated!
+            document.body.style.filter = 'hue-rotate(180deg)';
+            setTimeout(() => {
+                document.body.style.filter = '';
+            }, 3000);
+            console.log('🎮 GAMING MODE ACTIVATED! 🎮');
+        }
+    });
+</script>
 {% endblock %}

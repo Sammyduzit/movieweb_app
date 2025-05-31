@@ -1,43 +1,461 @@
 {% extends "base.html" %}
 
-{% block title %}Add Movie - MovieWeb App{% endblock %}
+{% block title %}Add Movie to {{ user.name }}'s Arena - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+Add a new movie to your gaming collection and challenge your movie knowledge!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-forms.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="neon-btn btn-sm">
+    🔙 Back to Arena
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">Add Movie for {{ user.name }}</h1>
-    
-    <form method="POST" action="/users/{{ user.id }}/add_movie">
-        <div class="form-group">
-            <label for="title" class="form-label">Movie Title:</label>
-            <input type="text" id="title" name="title" class="form-input" required>
-            <small style="color: #7f8c8d;">Movie details will be fetched automatically from OMDb API</small>
+<div class="form-arena">
+    <div class="form-container">
+        <!-- Form Header -->
+        <div class="form-header float-up opacity-0">
+            <h1 class="form-title">
+                🎬 Add Epic Movie
+            </h1>
+            <p class="form-subtitle">
+                Expand {{ user.name }}'s Gaming Collection
+            </p>
+
+            <!-- Instructions -->
+            <div class="form-instructions">
+                <div class="form-instructions-title">🎮 Gaming Enhancement Active</div>
+                <p>
+                    Enter just the movie title to get started! Our AI will automatically fetch
+                    director, year, genre, and poster from the OMDb database. You can override
+                    any field or add your personal rating.
+                </p>
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="director" class="form-label">Director:</label>
-            <input type="text" id="director" name="director" class="form-input">
-            <small style="color: #7f8c8d;">Optional - will be filled from API if available</small>
+
+        <!-- Main Form -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('movies.add_movie', user_id=user.id) }}"
+                  id="movieForm" class="form-grid">
+
+                <!-- Movie Title (Required) -->
+                <div class="form-field">
+                    <label for="title" class="field-label required">🎬 Movie Title</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="title"
+                               name="title"
+                               class="field-input"
+                               placeholder="Enter the movie title..."
+                               required
+                               maxlength="200"
+                               autocomplete="off">
+                        <span class="field-icon">🎬</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">AI will auto-fill other fields based on this title</span>
+                        <span class="field-counter" id="titleCounter">0/200</span>
+                    </div>
+                </div>
+
+                <!-- Director -->
+                <div class="form-field">
+                    <label for="director" class="field-label">🎭 Director</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="director"
+                               name="director"
+                               class="field-input"
+                               placeholder="Director name (auto-filled from API)"
+                               maxlength="100">
+                        <span class="field-icon">🎭</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Will be filled automatically if available</span>
+                        <span class="field-counter" id="directorCounter">0/100</span>
+                    </div>
+                </div>
+
+                <!-- Year -->
+                <div class="form-field">
+                    <label for="year" class="field-label">📅 Release Year</label>
+                    <div class="field-with-icon year-field">
+                        <input type="number"
+                               id="year"
+                               name="year"
+                               class="field-input"
+                               placeholder="YYYY"
+                               min="1800"
+                               max="2030"
+                               step="1">
+                        <span class="field-icon">📅</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Between 1800 and 2030</span>
+                    </div>
+                </div>
+
+                <!-- Genre -->
+                <div class="form-field">
+                    <label for="genre" class="field-label">🎪 Genre</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="genre"
+                               name="genre"
+                               class="field-input"
+                               placeholder="e.g., Action, Drama, Sci-Fi"
+                               maxlength="100">
+                        <span class="field-icon">🎪</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Auto-filled from movie database</span>
+                        <span class="field-counter" id="genreCounter">0/100</span>
+                    </div>
+                </div>
+
+                <!-- Personal Rating -->
+                <div class="form-field">
+                    <label for="rating" class="field-label">⭐ Your Personal Rating</label>
+                    <div class="field-with-icon rating-field">
+                        <input type="number"
+                               id="rating"
+                               name="rating"
+                               class="field-input"
+                               placeholder="Rate 1-10"
+                               min="1"
+                               max="10"
+                               step="0.1">
+                        <span class="rating-display" id="ratingDisplay"></span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Optional: Your personal score (1-10)</span>
+                    </div>
+                </div>
+
+                <!-- API Enhancement Indicator -->
+                <div class="api-indicator">
+                    <div class="api-icon">🤖</div>
+                    <div class="api-text">
+                        OMDb API Enhancement will automatically enrich your movie data with
+                        posters, plot details, and verified information.
+                    </div>
+                    <div class="api-status">Active</div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        🚀 Add to Collection
+                    </button>
+                    <a href="{{ url_for('movies.user_movies', user_id=user.id) }}"
+                       class="cancel-button">
+                        <span>❌</span>
+                        <span>Cancel</span>
+                    </a>
+                </div>
+            </form>
         </div>
-        
-        <div class="form-group">
-            <label for="year" class="form-label">Year:</label>
-            <input type="number" id="year" name="year" class="form-input" min="1900" max="2030">
-        </div>
-        
-        <div class="form-group">
-            <label for="genre" class="form-label">Genre:</label>
-            <input type="text" id="genre" name="genre" class="form-input">
-        </div>
-        
-        <div class="form-group">
-            <label for="rating" class="form-label">Your Rating (1-10):</label>
-            <input type="number" id="rating" name="rating" class="form-input" min="1" max="10" step="0.1">
-        </div>
-        
-        <div class="form-group" style="text-align: center;">
-            <button type="submit" class="btn btn-success">Add Movie</button>
-            <a href="/users/{{ user.id }}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('movieForm');
+        const titleInput = document.getElementById('title');
+        const directorInput = document.getElementById('director');
+        const yearInput = document.getElementById('year');
+        const genreInput = document.getElementById('genre');
+        const ratingInput = document.getElementById('rating');
+        const submitButton = document.querySelector('.submit-button');
+
+        // Character counters
+        function setupCharCounter(input, counterId, maxLength) {
+            const counter = document.getElementById(counterId);
+            if (input && counter) {
+                input.addEventListener('input', function() {
+                    const length = this.value.length;
+                    counter.textContent = `${length}/${maxLength}`;
+
+                    if (length > maxLength * 0.9) {
+                        counter.className = 'field-counter danger';
+                    } else if (length > maxLength * 0.7) {
+                        counter.className = 'field-counter warning';
+                    } else {
+                        counter.className = 'field-counter';
+                    }
+                });
+            }
+        }
+
+        setupCharCounter(titleInput, 'titleCounter', 200);
+        setupCharCounter(directorInput, 'directorCounter', 100);
+        setupCharCounter(genreInput, 'genreCounter', 100);
+
+        // Rating visual feedback
+        if (ratingInput) {
+            const ratingDisplay = document.getElementById('ratingDisplay');
+
+            ratingInput.addEventListener('input', function() {
+                const value = parseFloat(this.value);
+
+                if (isNaN(value) || value < 1 || value > 10) {
+                    ratingDisplay.textContent = '';
+                    ratingDisplay.className = 'rating-display';
+                    return;
+                }
+
+                let emoji = '';
+                let className = 'rating-display';
+
+                if (value >= 9) {
+                    emoji = '🔥';
+                    className += ' rating-10';
+                } else if (value >= 8) {
+                    emoji = '⭐';
+                    className += ' rating-8';
+                } else if (value >= 7) {
+                    emoji = '👍';
+                    className += ' rating-7';
+                } else if (value >= 6) {
+                    emoji = '👌';
+                    className += ' rating-6';
+                } else if (value >= 5) {
+                    emoji = '😐';
+                    className += ' rating-5';
+                } else if (value >= 3) {
+                    emoji = '👎';
+                    className += ' rating-3';
+                } else {
+                    emoji = '💀';
+                    className += ' rating-1';
+                }
+
+                ratingDisplay.textContent = emoji;
+                ratingDisplay.className = className;
+            });
+        }
+
+        // Form validation enhancements
+        function validateField(input, validationFn, errorMessage) {
+            if (!input) return true;
+
+            const isValid = validationFn(input.value);
+
+            if (isValid) {
+                input.style.borderColor = '#10b981';
+                input.style.backgroundColor = '';
+            } else {
+                input.style.borderColor = '#ef4444';
+                input.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            }
+
+            return isValid;
+        }
+
+        // Title validation
+        if (titleInput) {
+            titleInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => value.trim().length >= 1,
+                    'Movie title is required'
+                );
+            });
+        }
+
+        // Year validation
+        if (yearInput) {
+            yearInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => !value || (parseInt(value) >= 1800 && parseInt(value) <= 2030),
+                    'Year must be between 1800 and 2030'
+                );
+            });
+        }
+
+        // Rating validation
+        if (ratingInput) {
+            ratingInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => !value || (parseFloat(value) >= 1 && parseFloat(value) <= 10),
+                    'Rating must be between 1 and 10'
+                );
+            });
+        }
+
+        // Form submission handling
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Validate all fields
+                let isValid = true;
+
+                if (titleInput && !titleInput.value.trim()) {
+                    isValid = false;
+                    titleInput.focus();
+                    titleInput.style.borderColor = '#ef4444';
+                    titleInput.style.animation = 'validationError 0.5s ease';
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('🎮 Please enter at least a movie title to continue!');
+                    return false;
+                }
+
+                // Add loading state
+                if (submitButton) {
+                    submitButton.textContent = '🚀 Adding Movie...';
+                    submitButton.disabled = true;
+                    form.classList.add('form-loading');
+                }
+
+                // Show success message (will be replaced by page redirect)
+                setTimeout(() => {
+                    form.classList.add('form-success');
+                }, 100);
+            });
+        }
+
+        // Auto-focus first field
+        if (titleInput) {
+            setTimeout(() => {
+                titleInput.focus();
+            }, 500);
+        }
+
+        // Gaming atmosphere effects
+        function addFormGlow() {
+            const formCard = document.querySelector('.form-card');
+            if (formCard) {
+                const colors = ['#3b82f6', '#8b5cf6', '#10b981'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                formCard.style.boxShadow = `0 0 50px ${randomColor}40`;
+
+                setTimeout(() => {
+                    formCard.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+
+        // Add glow effect every 12 seconds
+        setInterval(addFormGlow, 12000);
+
+        // Input field gaming effects
+        const inputs = document.querySelectorAll('.field-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'scale(1.02)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Confetti for perfect ratings
+        function createConfetti() {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#ffd700'];
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '6px';
+                confetti.style.height = '6px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 50}px) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 2500 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Trigger confetti for perfect ratings
+        if (ratingInput) {
+            ratingInput.addEventListener('change', function() {
+                if (parseFloat(this.value) === 10) {
+                    setTimeout(createConfetti, 200);
+                }
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Alt + S = Submit form
+            if (e.altKey && e.key === 's') {
+                e.preventDefault();
+                if (submitButton && !submitButton.disabled) {
+                    submitButton.click();
+                }
+            }
+
+            // Escape = Cancel
+            if (e.key === 'Escape') {
+                const cancelButton = document.querySelector('.cancel-button');
+                if (cancelButton) {
+                    if (confirm('🚪 Are you sure you want to cancel adding this movie?')) {
+                        window.location.href = cancelButton.href;
+                    }
+                }
+            }
+        });
+
+        // Auto-save to localStorage (optional)
+        function saveFormData() {
+            const formData = {
+                title: titleInput?.value || '',
+                director: directorInput?.value || '',
+                year: yearInput?.value || '',
+                genre: genreInput?.value || '',
+                rating: ratingInput?.value || ''
+            };
+            localStorage.setItem(`movieForm_${new Date().toDateString()}`, JSON.stringify(formData));
+        }
+
+        // Save form data on input
+        inputs.forEach(input => {
+            input.addEventListener('input', saveFormData);
+        });
+
+        // Success animation on submit
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                document.body.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+                setTimeout(() => {
+                    document.body.style.background = '';
+                }, 1000);
+            }, 100);
+        });
+
+        // Add tooltip functionality
+        const hints = document.querySelectorAll('.field-hint');
+        hints.forEach(hint => {
+            hint.addEventListener('mouseenter', function() {
+                this.style.color = '#3b82f6';
+                this.style.transform = 'scale(1.05)';
+            });
+
+            hint.addEventListener('mouseleave', function() {
+                this.style.color = '#64748b';
+                this.style.transform = 'scale(1)';
+            });
+        });
+    });
+</script>
 {% endblock %}

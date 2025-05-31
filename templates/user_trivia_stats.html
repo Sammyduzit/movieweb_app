@@ -1,85 +1,692 @@
-<!-- templates/user_trivia_stats.html -->
 {% extends "base.html" %}
 
-{% block title %}{{ user.name }}'s Trivia Stats - MovieWeb App{% endblock %}
+{% block title %}{{ user.name }}'s Battle Stats - MovieWeb Gaming{% endblock %}
+
+{% block description %}Comprehensive trivia battle statistics, achievements, and performance analytics for {{ user.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-leaderboard.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="neon-btn btn-sm">
+    🔙 {{ user.name | truncate_text(10) }}'s Arena
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Header -->
-    <div class="stats-header">
-        <h1>📊 {{ user.name | truncate_text(25) }}'s Trivia Statistics</h1>
-    </div>
+<div class="leaderboard-arena">
+    <div class="leaderboard-container">
+        <!-- Player Header -->
+        <div class="stats-header float-up opacity-0">
+            <h1 class="leaderboard-title">
+                📊 {{ user.name | upper }}'S BATTLE STATS 📊
+            </h1>
+            <p class="leaderboard-subtitle">
+                Complete Performance Analytics & Achievement Dashboard
+            </p>
 
-    {% if stats.total_attempts > 0 %}
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.total_attempts }}</div>
-                <div class="stat-label">Total {{ pluralize(stats.total_attempts, 'Attempt') }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.best_score }}%</div>
-                <div class="stat-label">Best Score</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.average_score }}%</div>
-                <div class="stat-label">Average Score</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.movie_attempts }}</div>
-                <div class="stat-label">Movie {{ pluralize(stats.movie_attempts, 'Quiz', 'Quizzes') }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ stats.collection_attempts }}</div>
-                <div class="stat-label">Collection {{ pluralize(stats.collection_attempts, 'Quiz', 'Quizzes') }}</div>
-            </div>
-        </div>
-
-        <!-- Performance Badge -->
-        <div style="text-align: center; margin: 2rem 0;">
-            {% set performance = get_performance_badge(stats.best_score) %}
-            <div class="performance-badge">
-                {{ performance.emoji }} {{ performance.text }}
-            </div>
-            <p style="color: #7f8c8d; margin-top: 0.5rem;">Your highest achievement level</p>
-        </div>
-
-        <!-- Recent Scores -->
-        <div class="recent-scores">
-            <h2>🎯 Recent Attempts</h2>
-            {% for score in stats.recent_scores %}
-                <div class="score-entry">
-                    <div class="score-type">
-                        {% set trivia_info = format_trivia_type(score.trivia_type) %}
-                        {{ trivia_info.emoji }} {{ trivia_info.text }}
+            <!-- Player Status Badge -->
+            <div style="text-align: center; margin: 2rem 0;">
+                {% if stats.total_attempts == 0 %}
+                    <div class="performance-badge-large badge-no-data">
+                        🎮 No Data Yet
                     </div>
-                    <div class="score-result">
-                        {{ score.score }}/{{ score.total_questions }} ({{ score.percentage }}%)
-                        {% set perf = get_performance_badge(score.percentage) %}
-                        <span class="badge {{ perf.class }}" style="margin-left: 0.5rem; font-size: 0.8rem;">
-                            {{ perf.text }}
-                        </span>
+                {% else %}
+                    {% set performance = get_performance_badge(stats.best_score) %}
+                    <div class="performance-badge-large badge-{{ performance.class }}">
+                        {{ performance.emoji }} {{ performance.text }}
                     </div>
-                    <div class="score-date">{{ score.created_at | format_date('short') }}</div>
+                {% endif %}
+                <div style="color: #94a3b8; margin-top: 0.5rem; font-style: italic;">
+                    Current Battle Rank
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="no-stats">
-            <div class="empty-state">
-                <div class="empty-icon">🎮</div>
-                <h3>No Trivia Attempts Yet!</h3>
-                <p>Start playing trivia to build your statistics!</p>
-                <a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="btn btn-primary">🎬 Play Trivia</a>
             </div>
         </div>
-    {% endif %}
 
-    <!-- Actions -->
-    <div class="stats-actions">
-        <a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="btn btn-secondary">🔙 Back to Movies</a>
-        <a href="{{ url_for('trivia.global_leaderboard') }}" class="btn btn-primary">🏆 Global Leaderboard</a>
-        <a href="{{ url_for('trivia.collection_leaderboard') }}" class="btn btn-warning">🎯 Collection Leaderboard</a>
+        {% if stats.total_attempts > 0 %}
+            <!-- Main Stats Dashboard -->
+            <div class="stats-overview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+                <div class="stat-card" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border-top: 4px solid #3b82f6; border-radius: 1.5rem; padding: 2rem; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1), transparent); pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div class="stat-number" style="font-size: 3rem; font-weight: bold; color: #3b82f6; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">{{ stats.total_attempts }}</div>
+                        <div class="stat-label" style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Total {{ pluralize(stats.total_attempts, 'Battle') }}</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border-top: 4px solid #10b981; border-radius: 1.5rem; padding: 2rem; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.1), transparent); pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div class="stat-number" style="font-size: 3rem; font-weight: bold; color: #10b981; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">{{ stats.best_score }}%</div>
+                        <div class="stat-label" style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Best Score</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border-top: 4px solid #f59e0b; border-radius: 1.5rem; padding: 2rem; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.1), transparent); pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div class="stat-number" style="font-size: 3rem; font-weight: bold; color: #f59e0b; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">{{ stats.average_score }}%</div>
+                        <div class="stat-label" style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Average Score</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border-top: 4px solid #8b5cf6; border-radius: 1.5rem; padding: 2rem; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.1), transparent); pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div class="stat-number" style="font-size: 3rem; font-weight: bold; color: #8b5cf6; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">{{ stats.movie_attempts }}</div>
+                        <div class="stat-label" style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Movie {{ pluralize(stats.movie_attempts, 'Battle') }}</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border-top: 4px solid #ec4899; border-radius: 1.5rem; padding: 2rem; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.1), transparent); pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div class="stat-number" style="font-size: 3rem; font-weight: bold; color: #ec4899; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">{{ stats.collection_attempts }}</div>
+                        <div class="stat-label" style="color: #94a3b8; font-weight: bold; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Collection {{ pluralize(stats.collection_attempts, 'Battle') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievement Unlocks -->
+            <div class="achievements-section" style="background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #fbbf24; border-radius: 2rem; padding: 3rem; margin-bottom: 4rem; position: relative; overflow: hidden;">
+                <div style="position: absolute; inset: 0; padding: 2px; background: linear-gradient(45deg, #fbbf24, #f59e0b, #fbbf24); border-radius: inherit; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: xor; -webkit-mask-composite: xor; opacity: 0.8; animation: gradientShift 4s ease infinite;"></div>
+
+                <div style="position: relative; z-index: 1;">
+                    <h2 style="text-align: center; color: #fbbf24; font-family: 'Orbitron', monospace; font-size: 2rem; margin-bottom: 2rem; text-transform: uppercase;">
+                        🏅 ACHIEVEMENTS UNLOCKED 🏅
+                    </h2>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                        <!-- Battle Veteran -->
+                        <div class="achievement-card" style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid {% if stats.total_attempts >= 10 %}#10b981{% else %}#374151{% endif %};">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">{% if stats.total_attempts >= 10 %}🎖️{% else %}🔒{% endif %}</div>
+                            <h4 style="color: {% if stats.total_attempts >= 10 %}#10b981{% else %}#6b7280{% endif %}; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">BATTLE VETERAN</h4>
+                            <p style="color: #94a3b8; font-size: 0.875rem;">Complete 10+ trivia battles</p>
+                            <div style="color: #67e8f9; font-size: 0.75rem; margin-top: 0.5rem;">{{ stats.total_attempts }}/10</div>
+                        </div>
+
+                        <!-- Perfectionist -->
+                        <div class="achievement-card" style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid {% if stats.best_score == 100 %}#ffd700{% else %}#374151{% endif %};">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">{% if stats.best_score == 100 %}🏆{% else %}🔒{% endif %}</div>
+                            <h4 style="color: {% if stats.best_score == 100 %}#ffd700{% else %}#6b7280{% endif %}; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">PERFECTIONIST</h4>
+                            <p style="color: #94a3b8; font-size: 0.875rem;">Achieve 100% in any battle</p>
+                            <div style="color: #67e8f9; font-size: 0.75rem; margin-top: 0.5rem;">Best: {{ stats.best_score }}%</div>
+                        </div>
+
+                        <!-- Consistency Master -->
+                        <div class="achievement-card" style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid {% if stats.average_score >= 80 %}#8b5cf6{% else %}#374151{% endif %};">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">{% if stats.average_score >= 80 %}⚡{% else %}🔒{% endif %}</div>
+                            <h4 style="color: {% if stats.average_score >= 80 %}#8b5cf6{% else %}#6b7280{% endif %}; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">CONSISTENCY MASTER</h4>
+                            <p style="color: #94a3b8; font-size: 0.875rem;">Maintain 80%+ average score</p>
+                            <div style="color: #67e8f9; font-size: 0.75rem; margin-top: 0.5rem;">Average: {{ stats.average_score }}%</div>
+                        </div>
+
+                        <!-- Movie Expert -->
+                        <div class="achievement-card" style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid {% if stats.movie_attempts >= 5 %}#3b82f6{% else %}#374151{% endif %};">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">{% if stats.movie_attempts >= 5 %}🎬{% else %}🔒{% endif %}</div>
+                            <h4 style="color: {% if stats.movie_attempts >= 5 %}#3b82f6{% else %}#6b7280{% endif %}; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">MOVIE EXPERT</h4>
+                            <p style="color: #94a3b8; font-size: 0.875rem;">Complete 5+ movie battles</p>
+                            <div style="color: #67e8f9; font-size: 0.75rem; margin-top: 0.5rem;">{{ stats.movie_attempts }}/5</div>
+                        </div>
+
+                        <!-- Collection Champion -->
+                        <div class="achievement-card" style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid {% if stats.collection_attempts >= 3 %}#ec4899{% else %}#374151{% endif %};">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">{% if stats.collection_attempts >= 3 %}🎯{% else %}🔒{% endif %}</div>
+                            <h4 style="color: {% if stats.collection_attempts >= 3 %}#ec4899{% else %}#6b7280{% endif %}; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">COLLECTION CHAMPION</h4>
+                            <p style="color: #94a3b8; font-size: 0.875rem;">Complete 3+ collection battles</p>
+                            <div style="color: #67e8f9; font-size: 0.75rem; margin-top: 0.5rem;">{{ stats.collection_attempts }}/3</div>
+                        </div>
+
+                        <!-- Speed Demon (placeholder for future feature) -->
+                        <div class="achievement-card" style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid #374151;">
+                            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
+                            <h4 style="color: #6b7280; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">SPEED DEMON</h4>
+                            <p style="color: #94a3b8; font-size: 0.875rem;">Complete battle in under 60s</p>
+                            <div style="color: #67e8f9; font-size: 0.75rem; margin-top: 0.5rem;">Coming Soon!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Battle History -->
+            <div class="recent-scores" style="background: linear-gradient(145deg, #1a1a2e, #16213e); border: 2px solid #3b82f6; border-radius: 2rem; padding: 3rem; margin-bottom: 4rem; position: relative; overflow: hidden;">
+                <div style="position: absolute; inset: 0; padding: 2px; background: linear-gradient(45deg, #3b82f6, #8b5cf6, #3b82f6); border-radius: inherit; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: xor; -webkit-mask-composite: xor; opacity: 0.6; animation: gradientShift 5s ease infinite;"></div>
+
+                <div style="position: relative; z-index: 1;">
+                    <h2 style="text-align: center; color: #3b82f6; font-family: 'Orbitron', monospace; font-size: 2rem; margin-bottom: 3rem; text-transform: uppercase;">
+                        ⚔️ Recent Battle History ⚔️
+                    </h2>
+
+                    {% if stats.recent_scores %}
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            {% for score in stats.recent_scores %}
+                            <div class="score-entry leaderboard-entry" style="background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #475569; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem; transition: all 0.3s ease;">
+                                <!-- Battle Type Badge -->
+                                <div style="flex-shrink: 0;">
+                                    {% set trivia_info = format_trivia_type(score.trivia_type) %}
+                                    <div style="width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(45deg, {% if score.trivia_type == 'movie' %}#3b82f6, #1d4ed8{% else %}#10b981, #059669{% endif %}); color: white; font-weight: bold; box-shadow: 0 4px 15px rgba({% if score.trivia_type == 'movie' %}59, 130, 246{% else %}16, 185, 129{% endif %}, 0.4);">
+                                        {{ trivia_info.emoji }}
+                                    </div>
+                                </div>
+
+                                <!-- Battle Info -->
+                                <div style="flex: 1;">
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: #fff; margin-bottom: 0.5rem; font-family: 'Orbitron', monospace;">
+                                        {{ trivia_info.text }}
+                                    </div>
+                                    <div style="color: #94a3b8; font-size: 0.875rem;">
+                                        {{ score.created_at | format_date('long') }}
+                                    </div>
+                                </div>
+
+                                <!-- Score Display -->
+                                <div style="text-align: center; margin-right: 1rem;">
+                                    <div style="font-size: 2rem; font-weight: bold; color: {% if score.percentage >= 90 %}#ffd700{% elif score.percentage >= 80 %}#10b981{% elif score.percentage >= 70 %}#3b82f6{% elif score.percentage >= 60 %}#f59e0b{% else %}#ef4444{% endif %}; font-family: 'Orbitron', monospace;">
+                                        {{ score.score }}/{{ score.total_questions }}
+                                    </div>
+                                    <div style="color: #94a3b8; font-size: 1rem;">{{ score.percentage }}%</div>
+                                </div>
+
+                                <!-- Performance Badge -->
+                                <div style="flex-shrink: 0;">
+                                    {% set perf = get_performance_badge(score.percentage) %}
+                                    <div class="performance-badge badge-{{ perf.class }}" style="padding: 0.5rem 1rem; border-radius: 1.5rem; font-weight: bold; font-size: 0.875rem; text-transform: uppercase; font-family: 'Orbitron', monospace; {% if perf.class == 'master' %}background: linear-gradient(45deg, #8b5cf6, #7c3aed); color: white;{% elif perf.class == 'expert' %}background: linear-gradient(45deg, #10b981, #059669); color: white;{% elif perf.class == 'buff' %}background: linear-gradient(45deg, #f59e0b, #d97706); color: white;{% else %}background: linear-gradient(45deg, #6b7280, #4b5563); color: white;{% endif %}">
+                                        {{ perf.emoji }} {{ perf.text }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="text-align: center; color: #94a3b8; font-style: italic; padding: 2rem;">
+                            No recent battles to display
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        {% else %}
+            <!-- No Stats State -->
+            <div class="no-stats" style="text-align: center; padding: 4rem 2rem;">
+                <div class="gaming-card" style="max-width: 600px; margin: 0 auto; padding: 4rem; background: linear-gradient(145deg, #1a1a2e, #16213e); border: 2px solid #6b7280; border-radius: 2rem;">
+                    <div style="font-size: 5rem; margin-bottom: 2rem; opacity: 0.7;">🎮</div>
+                    <h3 class="gaming-font" style="font-size: 2rem; margin-bottom: 1rem; color: #fff; font-family: 'Orbitron', monospace;">
+                        NO BATTLE DATA FOUND!
+                    </h3>
+                    <p style="color: #67e8f9; margin-bottom: 2rem; font-size: 1.125rem; line-height: 1.6;">
+                        {{ user.name }} hasn't entered any trivia battles yet! Time to start the epic journey and
+                        unlock achievements, climb leaderboards, and prove movie mastery!
+                    </p>
+                    <a href="{{ url_for('movies.user_movies', user_id=user.id) }}"
+                       class="trivia-btn btn-xl pulse-btn">
+                        🚀 START FIRST BATTLE
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="stats-actions" style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-top: 4rem;">
+            <a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="neon-btn btn-lg">
+                🔙 Return to Arena
+            </a>
+            <a href="{{ url_for('trivia.global_leaderboard') }}" class="trivia-btn btn-lg">
+                🏆 Global Leaderboard
+            </a>
+            <a href="{{ url_for('trivia.collection_leaderboard') }}" class="neon-btn btn-lg">
+                🎯 Collection Champions
+            </a>
+            {% if stats.total_attempts > 0 %}
+                <a href="{{ url_for('trivia.collection_trivia', user_id=user.id) }}" class="trivia-btn btn-lg pulse-btn">
+                    ⚔️ New Battle
+                </a>
+            {% endif %}
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate stat cards entrance
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+            }, 200 + (index * 150));
+        });
+
+        // Animated number counting for stats
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(stat => {
+            const finalText = stat.textContent;
+            const finalNumber = parseInt(finalText);
+
+            if (!isNaN(finalNumber) && finalNumber > 0) {
+                let currentNumber = 0;
+                const increment = Math.max(1, Math.ceil(finalNumber / 30));
+
+                const timer = setInterval(() => {
+                    currentNumber += increment;
+                    if (currentNumber >= finalNumber) {
+                        currentNumber = finalNumber;
+                        clearInterval(timer);
+                        stat.textContent = finalText; // Restore original format
+                    } else {
+                        stat.textContent = currentNumber + (finalText.includes('%') ? '%' : '');
+                    }
+                }, 50);
+            }
+        });
+
+        // Achievement unlock animations
+        const achievements = document.querySelectorAll('.achievement-card');
+        achievements.forEach((achievement, index) => {
+            const isUnlocked = achievement.querySelector('div[style*="🎖️"], div[style*="🏆"], div[style*="⚡"], div[style*="🎬"], div[style*="🎯"]');
+
+            setTimeout(() => {
+                if (isUnlocked) {
+                    // Unlock animation for achieved badges
+                    achievement.style.transform = 'scale(1.05)';
+                    achievement.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.5)';
+
+                    setTimeout(() => {
+                        achievement.style.transform = 'scale(1)';
+                        achievement.style.boxShadow = '';
+                    }, 600);
+                }
+            }, 1000 + (index * 200));
+
+            // Hover effects
+            achievement.addEventListener('mouseenter', function() {
+                if (isUnlocked) {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                } else {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.opacity = '0.7';
+                }
+            });
+
+            achievement.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+                this.style.opacity = '1';
+            });
+        });
+
+        // Recent battle entries hover effects
+        const battleEntries = document.querySelectorAll('.score-entry');
+        battleEntries.forEach(entry => {
+            entry.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.borderColor = '#00ffff';
+                this.style.boxShadow = '0 15px 35px rgba(0, 255, 255, 0.2)';
+            });
+
+            entry.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.borderColor = '#475569';
+                this.style.boxShadow = '';
+            });
+        });
+
+        // Performance badge click effects
+        const performanceBadges = document.querySelectorAll('.performance-badge');
+        performanceBadges.forEach(badge => {
+            badge.addEventListener('click', function() {
+                this.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 200);
+            });
+        });
+
+        // Special effects for perfect scores
+        const perfectScores = document.querySelectorAll('[style*="color: #ffd700"]');
+        perfectScores.forEach(score => {
+            if (score.textContent.includes('100') || score.textContent.includes('10/10')) {
+                // Add golden glow for perfect scores
+                setInterval(() => {
+                    score.style.textShadow = '0 0 20px #ffd700';
+                    setTimeout(() => {
+                        score.style.textShadow = '';
+                    }, 1000);
+                }, 3000);
+            }
+        });
+
+        // Gaming atmosphere effects
+        function addStatsGlow() {
+            const statsSection = document.querySelector('.stats-overview');
+            if (statsSection) {
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                statsSection.style.filter = `drop-shadow(0 0 20px ${randomColor}40)`;
+
+                setTimeout(() => {
+                    statsSection.style.filter = '';
+                }, 2000);
+            }
+        }
+
+        // Add glow effect every 8 seconds
+        setInterval(addStatsGlow, 8000);
+
+        // Konami code for achievement unlock animation
+        let konamiCode = [];
+        const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.keyCode);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                // Secret achievement unlock animation
+                achievements.forEach((achievement, index) => {
+                    setTimeout(() => {
+                        achievement.style.background = 'linear-gradient(45deg, #ffd700, #ff006e, #00ffff)';
+                        achievement.style.transform = 'scale(1.1) rotate(5deg)';
+                        achievement.querySelector('div[style*="font-size: 2.5rem"]').textContent = '🎊';
+
+                        setTimeout(() => {
+                            achievement.style.background = '';
+                            achievement.style.transform = 'scale(1) rotate(0deg)';
+                        }, 2000);
+                    }, index * 200);
+                });
+
+                console.log('🎮 SECRET ACHIEVEMENT UNLOCKED: Konami Code Master! 🎮');
+            }
+        });
+
+        // Auto-scroll to recent battles if user has many attempts
+        {% if stats.total_attempts > 5 %}
+        setTimeout(() => {
+            const recentSection = document.querySelector('.recent-scores');
+            if (recentSection) {
+                recentSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }, 3000);
+        {% endif %}
+
+        // Dynamic achievement progress bars
+        const achievementCards = document.querySelectorAll('.achievement-card');
+        achievementCards.forEach(card => {
+            const progressText = card.querySelector('div[style*="color: #67e8f9"]');
+            if (progressText && progressText.textContent.includes('/')) {
+                const [current, total] = progressText.textContent.split('/').map(n => parseInt(n));
+                if (!isNaN(current) && !isNaN(total)) {
+                    const progressPercent = Math.min((current / total) * 100, 100);
+
+                    // Add progress bar
+                    const progressBar = document.createElement('div');
+                    progressBar.style.cssText = `
+                        width: 100%;
+                        height: 4px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 2px;
+                        margin-top: 0.5rem;
+                        overflow: hidden;
+                    `;
+
+                    const progressFill = document.createElement('div');
+                    progressFill.style.cssText = `
+                        width: ${progressPercent}%;
+                        height: 100%;
+                        background: linear-gradient(90deg, #3b82f6, #10b981);
+                        border-radius: 2px;
+                        transition: width 1s ease;
+                    `;
+
+                    progressBar.appendChild(progressFill);
+                    card.appendChild(progressBar);
+
+                    // Animate progress bar
+                    setTimeout(() => {
+                        progressFill.style.width = progressPercent + '%';
+                    }, 1000 + Array.from(achievementCards).indexOf(card) * 200);
+                }
+            }
+        });
+
+        // Battle type distribution chart (simple visualization)
+        {% if stats.movie_attempts > 0 or stats.collection_attempts > 0 %}
+        const totalBattles = {{ stats.movie_attempts }} + {{ stats.collection_attempts }};
+        const moviePercent = ({{ stats.movie_attempts }} / totalBattles) * 100;
+        const collectionPercent = ({{ stats.collection_attempts }} / totalBattles) * 100;
+
+        console.log(`📊 Battle Distribution: ${moviePercent.toFixed(1)}% Movie, ${collectionPercent.toFixed(1)}% Collection`);
+        {% endif %}
+
+        // Performance trend analysis
+        {% if stats.recent_scores %}
+        const recentScores = [
+            {% for score in stats.recent_scores %}
+            {{ score.percentage }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        const trend = recentScores.length > 1 ?
+            (recentScores[0] > recentScores[recentScores.length - 1] ? 'improving' :
+             recentScores[0] < recentScores[recentScores.length - 1] ? 'declining' : 'stable') : 'insufficient_data';
+
+        console.log(`📈 Performance Trend: ${trend}`);
+
+        // Add trend indicator to recent battles section
+        const recentTitle = document.querySelector('.recent-scores h2');
+        if (recentTitle && trend !== 'insufficient_data') {
+            const trendIcon = trend === 'improving' ? '📈' : trend === 'declining' ? '📉' : '➖';
+            const trendColor = trend === 'improving' ? '#10b981' : trend === 'declining' ? '#ef4444' : '#6b7280';
+
+            const trendIndicator = document.createElement('span');
+            trendIndicator.textContent = ` ${trendIcon}`;
+            trendIndicator.style.color = trendColor;
+            recentTitle.appendChild(trendIndicator);
+        }
+        {% endif %}
+
+        // Motivational messages based on performance
+        {% if stats.total_attempts > 0 %}
+        const motivationalMessages = {
+            master: [
+                "🔥 You're absolutely crushing it! Movie mastery achieved!",
+                "👑 Legendary status unlocked! You're a true cinema champion!",
+                "⚡ Incredible performance! Your movie knowledge is unmatched!"
+            ],
+            expert: [
+                "⭐ Excellent work! You're a certified movie expert!",
+                "🎯 Outstanding performance! Keep climbing those leaderboards!",
+                "🏆 Impressive skills! You're becoming a trivia legend!"
+            ],
+            buff: [
+                "👍 Great job! You're a solid movie buff!",
+                "🎬 Nice work! Your cinema knowledge is growing strong!",
+                "🚀 Keep it up! You're on the path to greatness!"
+            ],
+            learning: [
+                "📚 Every battle makes you stronger! Keep learning!",
+                "🎮 You're improving with each challenge! Don't give up!",
+                "💪 Practice makes perfect! Your dedication will pay off!"
+            ]
+        };
+
+        {% set current_performance = get_performance_badge(stats.best_score) %}
+        const currentLevel = '{{ current_performance.class }}';
+        const messages = motivationalMessages[currentLevel] || motivationalMessages.learning;
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+        // Show motivational tooltip on performance badge
+        const performanceBadge = document.querySelector('.performance-badge-large');
+        if (performanceBadge) {
+            performanceBadge.title = randomMessage;
+
+            performanceBadge.addEventListener('click', function() {
+                alert(randomMessage);
+            });
+        }
+        {% endif %}
+
+        // Keyboard shortcuts for quick navigation
+        document.addEventListener('keydown', function(e) {
+            // A = Achievements
+            if (e.key === 'a' || e.key === 'A') {
+                const achievementsSection = document.querySelector('.achievements-section');
+                if (achievementsSection) {
+                    achievementsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            // R = Recent battles
+            if (e.key === 'r' || e.key === 'R') {
+                const recentSection = document.querySelector('.recent-scores');
+                if (recentSection) {
+                    recentSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            // B = Start new battle
+            if (e.key === 'b' || e.key === 'B') {
+                const battleButton = document.querySelector('[href*="trivia"]');
+                if (battleButton) {
+                    window.location.href = battleButton.href;
+                }
+            }
+
+            // L = Leaderboard
+            if (e.key === 'l' || e.key === 'L') {
+                const leaderboardButton = document.querySelector('[href*="leaderboard"]');
+                if (leaderboardButton) {
+                    window.location.href = leaderboardButton.href;
+                }
+            }
+        });
+
+        // Add sparkle effects to unlocked achievements
+        function createSparkles(element) {
+            for (let i = 0; i < 3; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.style.cssText = `
+                    position: absolute;
+                    width: 4px;
+                    height: 4px;
+                    background: #ffd700;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 1000;
+                `;
+
+                element.style.position = 'relative';
+                element.appendChild(sparkle);
+
+                const randomX = Math.random() * 100 - 50;
+                const randomY = Math.random() * 100 - 50;
+
+                sparkle.animate([
+                    {
+                        transform: 'translate(0, 0) scale(0)',
+                        opacity: 1
+                    },
+                    {
+                        transform: `translate(${randomX}px, ${randomY}px) scale(1)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                }).onfinish = () => sparkle.remove();
+            }
+        }
+
+        // Add sparkles to unlocked achievements periodically
+        const unlockedAchievements = document.querySelectorAll('.achievement-card[style*="border: 2px solid #10b981"], .achievement-card[style*="border: 2px solid #ffd700"], .achievement-card[style*="border: 2px solid #8b5cf6"], .achievement-card[style*="border: 2px solid #3b82f6"], .achievement-card[style*="border: 2px solid #ec4899"]');
+
+        if (unlockedAchievements.length > 0) {
+            setInterval(() => {
+                const randomAchievement = unlockedAchievements[Math.floor(Math.random() * unlockedAchievements.length)];
+                createSparkles(randomAchievement);
+            }, 5000);
+        }
+
+        // Performance analytics logging
+        const analyticsData = {
+            userId: {{ user.id }},
+            totalAttempts: {{ stats.total_attempts }},
+            bestScore: {{ stats.best_score }},
+            averageScore: {{ stats.average_score }},
+            movieAttempts: {{ stats.movie_attempts }},
+            collectionAttempts: {{ stats.collection_attempts }},
+            {% if stats.recent_scores %}
+            recentTrend: trend,
+            {% endif %}
+            timestamp: new Date().toISOString()
+        };
+
+        console.log('📊 Player Analytics:', analyticsData);
+
+        // Add warning for inactive players
+        {% if stats.total_attempts == 0 %}
+        setTimeout(() => {
+            const inactiveWarning = document.createElement('div');
+            inactiveWarning.innerHTML = '⏰ Ready to start your trivia journey? Your first battle awaits!';
+            inactiveWarning.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: linear-gradient(45deg, #ff006e, #8338ec);
+                color: white;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                font-family: 'Orbitron', monospace;
+                font-weight: bold;
+                z-index: 9999;
+                cursor: pointer;
+                animation: pulse 2s infinite;
+            `;
+
+            inactiveWarning.addEventListener('click', () => {
+                window.location.href = "{{ url_for('movies.user_movies', user_id=user.id) }}";
+            });
+
+            document.body.appendChild(inactiveWarning);
+
+            // Remove after 10 seconds
+            setTimeout(() => {
+                inactiveWarning.remove();
+            }, 10000);
+        }, 3000);
+        {% endif %}
+
+        // Console congratulations for high performers
+        {% if stats.best_score == 100 %}
+        console.log(`
+    ╔═══════════════════════════════════════╗
+    ║          🏆 PERFECT SCORE! 🏆         ║
+    ║                                       ║
+    ║  Congratulations on achieving 100%!   ║
+    ║  You are a true Movie Gaming Master!  ║
+    ║                                       ║
+    ║  Keep up the legendary performance!   ║
+    ╚═══════════════════════════════════════╝
+        `);
+        {% elif stats.average_score >= 90 %}
+        console.log(`
+    ╔═══════════════════════════════════════╗
+    ║        🌟 EXCEPTIONAL PLAYER! 🌟      ║
+    ║                                       ║
+    ║  Your consistency is remarkable!      ║
+    ║  Average Score: {{ stats.average_score }}% - Outstanding!     ║
+    ║                                       ║
+    ║  You're among the elite players!      ║
+    ╚═══════════════════════════════════════╝
+        `);
+        {% endif %}
+    });
+</script>
 {% endblock %}

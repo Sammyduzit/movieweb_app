@@ -1,26 +1,323 @@
 {% extends "base.html" %}
 
-{% block title %}Trivia Unavailable - MovieWeb App{% endblock %}
+{% block title %}Battle System Offline - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+The AI trivia battle system is temporarily offline. Don't worry, we'll be back soon!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-error.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="trivia-error">
-        <div class="relaxo-container">
-            <div class="relaxo-image">😴</div>
-            <div class="relaxo-text">Relaxo is sleeping...</div>
-        </div>
-        
-        <h2>🤖 AI Trivia Temporarily Unavailable</h2>
-        
-        <div class="error-message">
-            <p>Our AI trivia generator is taking a nap right now.</p>
-            <p>{% if error_type == 'movie' %}Try the trivia again later, or explore other movies!{% else %}Try collection trivia again later, or add more movies to your collection!{% endif %}</p>
-        </div>
-        
-        <div class="error-actions">
-            <a href="{{ back_url }}" class="btn btn-primary">🔙 Go Back</a>
-            <a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">👥 All Users</a>
+<div class="error-arena error-503">
+    <!-- Matrix Rain Background -->
+    <div class="matrix-rain" id="matrixRain"></div>
+
+    <div class="error-container">
+        <!-- Console Frame -->
+        <div class="console-frame">
+            <!-- Error Mascot -->
+            <div class="error-mascot" style="font-size: 6rem; margin-bottom: 2rem; animation: errorFloat 3s ease-in-out infinite;">
+                😴
+            </div>
+
+            <h1 class="error-title">
+                🤖 AI Battle System Offline
+            </h1>
+
+            <p class="error-subtitle">
+                Our trivia AI is currently recharging its neural networks!
+            </p>
+
+            <div class="error-description">
+                {% if error_type == 'movie' %}
+                    The movie trivia battle system is temporarily unavailable. Our AI trainers are working hard to
+                    optimize the neural pathways for even more challenging questions. While we're offline,
+                    explore other movies in your collection or challenge friends to manual trivia!
+                {% else %}
+                    The collection trivia battle arena is currently under maintenance. Our algorithms are being
+                    upgraded to create even more epic multi-movie challenges. Try adding more movies to your
+                    collection or test individual movie knowledge instead!
+                {% endif %}
+            </div>
+
+            <!-- Game Over Screen -->
+            <div class="game-over">
+                <div class="game-over-text">System Maintenance</div>
+                <div class="game-over-score">
+                    Status: Temporarily Offline |
+                    ETA: Back Soon |
+                    Battle Type: {{ error_type.title() }} Trivia
+                </div>
+            </div>
+
+            <!-- Movie Quote Easter Egg -->
+            <div class="movie-quote">
+                <div class="quote-text">
+                    {% set maintenance_quotes = [
+                        '"I\'ll be back... after this system upgrade." - The Terminator',
+                        '"The system... it\'s evolving." - The Matrix',
+                        '"We\'re gonna need a bigger server." - Jaws',
+                        '"May the code be with you... always." - Star Wars',
+                        '"There is no try, only debug." - Yoda (probably)'
+                    ] %}
+                    {{ maintenance_quotes | random }}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="error-actions">
+                <a href="{{ back_url }}" class="error-action action-back">
+                    <span>🔙</span>
+                    <span>Return to Arena</span>
+                </a>
+
+                {% if error_type == 'movie' %}
+                    <a href="{{ url_for('movies.user_movies', user_id=back_url.split('/')[-3] if back_url else 1) }}" class="error-action action-home">
+                        <span>🎬</span>
+                        <span>Browse Movies</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('movies.add_movie', user_id=back_url.split('/')[-2] if back_url else 1) }}" class="error-action action-home">
+                        <span>➕</span>
+                        <span>Add Movies</span>
+                    </a>
+                {% endif %}
+
+                <a href="{{ url_for('trivia.global_leaderboard') }}" class="error-action action-retry">
+                    <span>🏆</span>
+                    <span>Leaderboard</span>
+                </a>
+
+                <a href="{{ url_for('users.list_users') }}" class="error-action action-home">
+                    <span>👥</span>
+                    <span>Player Lobby</span>
+                </a>
+            </div>
+
+            <!-- System Status -->
+            <div class="error-tech-info">
+                <div class="tech-info-title">⚡ System Status</div>
+                <div class="tech-info-content">
+                    Battle Arena: Online ✅<br>
+                    Movie Database: Online ✅<br>
+                    User Profiles: Online ✅<br>
+                    {% if error_type == 'movie' %}
+                    Movie Trivia AI: Offline 🔧<br>
+                    Collection Trivia AI: Online ✅<br>
+                    {% else %}
+                    Movie Trivia AI: Online ✅<br>
+                    Collection Trivia AI: Offline 🔧<br>
+                    {% endif %}
+                    Leaderboards: Online ✅<br>
+                    Status: Maintenance Mode
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Matrix rain effect
+        function createMatrixRain() {
+            const container = document.getElementById('matrixRain');
+            if (!container) return;
+
+            const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ🤖⚡🔧💤AIERROR{}[]()<>!@#$%^&*';
+            const columns = Math.floor(window.innerWidth / 20);
+
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.className = 'rain-column';
+                column.style.left = (i * 20) + 'px';
+                column.style.animationDelay = Math.random() * 3 + 's';
+                column.style.animationDuration = (3 + Math.random() * 2) + 's';
+
+                // Create random character string
+                let text = '';
+                for (let j = 0; j < 20; j++) {
+                    text += chars[Math.floor(Math.random() * chars.length)] + '<br>';
+                }
+                column.innerHTML = text;
+
+                container.appendChild(column);
+            }
+        }
+
+        // Initialize matrix rain
+        createMatrixRain();
+
+        // Sleeping mascot animation enhancement
+        const mascot = document.querySelector('.error-mascot');
+        if (mascot) {
+            setInterval(() => {
+                // Add breathing effect
+                mascot.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    mascot.style.transform = 'scale(1)';
+                }, 1000);
+            }, 3000);
+        }
+
+        // Action button effects
+        const actionButtons = document.querySelectorAll('.error-action');
+        actionButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-3px) scale(1)';
+            });
+
+            button.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+
+        // System status blinking effect
+        const statusInfo = document.querySelector('.error-tech-info');
+        if (statusInfo) {
+            setInterval(() => {
+                statusInfo.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    statusInfo.style.borderColor = '#475569';
+                }, 500);
+            }, 2000);
+        }
+
+        // Console log for developers
+        console.log(`
+    ╔═══════════════════════════════════════╗
+    ║     🤖 MOVIEWEB TRIVIA SYSTEM 🤖      ║
+    ║                                       ║
+    ║  Battle Arena Status: Maintenance     ║
+    ║  Expected Downtime: Minimal           ║
+    ║                                       ║
+    ║  While you wait:                      ║
+    ║  • Build your movie collection        ║
+    ║  • Check out the leaderboards         ║
+    ║  • Challenge friends manually         ║
+    ║                                       ║
+    ║  Happy Gaming! 🎮🎬                   ║
+    ╚═══════════════════════════════════════╝
+        `);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // R = Retry (go back)
+            if (e.key === 'r' || e.key === 'R') {
+                const backBtn = document.querySelector('.action-back');
+                if (backBtn) {
+                    window.location.href = backBtn.href;
+                }
+            }
+
+            // L = Leaderboard
+            if (e.key === 'l' || e.key === 'L') {
+                const leaderboardBtn = document.querySelector('[href*="leaderboard"]');
+                if (leaderboardBtn) {
+                    window.location.href = leaderboardBtn.href;
+                }
+            }
+
+            // Escape = Back
+            if (e.key === 'Escape') {
+                const backBtn = document.querySelector('.action-back');
+                if (backBtn) {
+                    window.location.href = backBtn.href;
+                }
+            }
+        });
+
+        // Auto-refresh hint (but don't actually refresh)
+        setTimeout(() => {
+            console.log('💡 Tip: Try refreshing the page in a few minutes to check if the system is back online!');
+        }, 5000);
+
+        // Add some random AI "thinking" effects
+        function showAIThinking() {
+            const thinkingDots = document.createElement('div');
+            thinkingDots.textContent = '🤖 AI thinking';
+            thinkingDots.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.8);
+                color: #67e8f9;
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                font-family: 'Orbitron', monospace;
+                font-size: 0.875rem;
+                z-index: 9999;
+                border: 1px solid #67e8f9;
+            `;
+
+            document.body.appendChild(thinkingDots);
+
+            let dots = '';
+            const interval = setInterval(() => {
+                dots += '.';
+                if (dots.length > 3) dots = '';
+                thinkingDots.textContent = '🤖 AI thinking' + dots;
+            }, 500);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                thinkingDots.remove();
+            }, 3000);
+        }
+
+        // Show thinking animation every 10 seconds
+        setInterval(showAIThinking, 10000);
+
+        // Konami code for secret message
+        let konamiCode = [];
+        const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.keyCode);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                // Secret developer message
+                const secretMessage = document.createElement('div');
+                secretMessage.innerHTML = '🎊 SECRET DEV MODE! 🎊<br>The AI is actually just taking a coffee break ☕<br>It\'ll be back after its espresso!';
+                secretMessage.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(45deg, #ff006e, #8338ec);
+                    color: white;
+                    padding: 2rem;
+                    border-radius: 1rem;
+                    z-index: 9999;
+                    text-align: center;
+                    font-family: 'Orbitron', monospace;
+                    font-weight: bold;
+                    animation: errorPulse 1s ease-in-out infinite;
+                    border: 2px solid #ffd700;
+                `;
+                document.body.appendChild(secretMessage);
+
+                setTimeout(() => {
+                    secretMessage.remove();
+                }, 4000);
+
+                console.log('🎮 Secret developer mode activated! The AI is just having a snack break! 🍕');
+            }
+        });
+    });
+</script>
 {% endblock %}

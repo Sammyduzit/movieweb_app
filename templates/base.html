@@ -3,40 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MovieWeb App{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <title>{% block title %}MovieWeb Gaming Platform{% endblock %}</title>
+
+    <!-- Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Gaming Styles - Modular CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-movies.css') }}">
+
+    <!-- Additional page-specific styles -->
     {% block extra_css %}{% endblock %}
+
+    <!-- Meta tags for better SEO -->
+    <meta name="description" content="{% block description %}Level up your movie experience with MovieWeb Gaming Platform - Trivia, Reviews, and Leaderboards!{% endblock %}">
+    <meta name="keywords" content="movies, trivia, gaming, reviews, cinema, entertainment">
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="{% block og_title %}MovieWeb Gaming Platform{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}The ultimate gaming experience for movie lovers{% endblock %}">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
+    <!-- Cyber Grid Background -->
+    <div class="cyber-grid"></div>
+
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="/users" class="nav-brand">MovieWeb App</a>
-            <ul class="nav-menu">
-                <li><a href="/users" class="nav-link">Users</a></li>
-                <li><a href="/add_user" class="nav-link">Add User</a></li>
-                <li><a href="{{ url_for('trivia.global_leaderboard') }}" class="nav-link">🏆 Leaderboard</a></li>
-            </ul>
+            <div class="nav-brand slide-left opacity-0">
+                <div class="nav-logo gaming-font">
+                    M
+                </div>
+                <h1 class="nav-title gaming-font neon-text">MOVIEWEB</h1>
+            </div>
+
+            <div class="nav-menu slide-right opacity-0">
+                <a href="{{ url_for('users.list_users') }}" class="nav-link">USERS</a>
+                <a href="{{ url_for('trivia.global_leaderboard') }}" class="nav-link leaderboard">LEADERBOARD</a>
+
+                <!-- Optional user-specific navigation -->
+                {% block nav_extra %}{% endblock %}
+
+                <!-- CTA Button in Navigation -->
+                {% block nav_cta %}
+                <a href="{{ url_for('users.add_user') }}" class="neon-btn btn-sm">
+                    ADD USER
+                </a>
+                {% endblock %}
+            </div>
         </div>
     </nav>
 
-    <main class="main-content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="message message-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }} float-up opacity-0">
+                        <div class="gaming-card" style="margin: 1rem auto; max-width: 600px; padding: 1rem; text-align: center;">
+                            {% if category == 'success' %}
+                                <span style="color: #10b981;">✅ {{ message }}</span>
+                            {% elif category == 'error' %}
+                                <span style="color: #ef4444;">❌ {{ message }}</span>
+                            {% elif category == 'warning' %}
+                                <span style="color: #f59e0b;">⚠️ {{ message }}</span>
+                            {% else %}
+                                <span style="color: #67e8f9;">ℹ️ {{ message }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-        {% block content %}{% endblock %}
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        <!-- Page content goes here -->
+        {% endblock %}
     </main>
 
+    <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2025 MovieWeb App</p>
+        <div class="footer-container">
+            <div class="footer-title gaming-font">
+                MOVIEWEB GAMING PLATFORM
+            </div>
+            <p class="footer-text">© 2025 - Level up your movie experience!</p>
+
+            <!-- Optional footer content -->
+            {% block footer_extra %}{% endblock %}
+        </div>
     </footer>
 
+    <!-- Core JavaScript -->
+    <script>
+        // Intersection Observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        // Observe all animation elements
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.float-up, .slide-left, .slide-right').forEach(el => {
+                observer.observe(el);
+            });
+        });
+
+        // Gaming Card Interactive Effects
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.gaming-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    const randomColors = ['#ff00ff', '#00ffff', '#ffff00', '#ff006e'];
+                    const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+                    card.style.boxShadow = `0 20px 40px ${randomColor}40, 0 0 20px ${randomColor}60`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.boxShadow = '';
+                });
+            });
+        });
+
+        // Typing effect for neon text
+        document.addEventListener('DOMContentLoaded', function() {
+            const neonTexts = document.querySelectorAll('.neon-text');
+            neonTexts.forEach(title => {
+                if (title.dataset.typewriter !== 'false') {
+                    const originalText = title.textContent;
+                    title.textContent = '';
+                    let i = 0;
+                    const typeWriter = () => {
+                        if (i < originalText.length) {
+                            title.textContent += originalText.charAt(i);
+                            i++;
+                            setTimeout(typeWriter, 100);
+                        }
+                    };
+                    setTimeout(typeWriter, 1000);
+                }
+            });
+        });
+
+        // Sound effects (optional - can be enabled later)
+        function playClickSound() {
+            // Audio context for gaming sounds
+            // Can be implemented later with actual sound files
+        }
+
+        // Add click sound to buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.neon-btn, .trivia-btn').forEach(btn => {
+                btn.addEventListener('click', playClickSound);
+            });
+        });
+    </script>
+
+    <!-- Page-specific JavaScript -->
     {% block extra_js %}{% endblock %}
+
+    <!-- Analytics or other tracking scripts -->
+    {% block analytics %}{% endblock %}
 </body>
 </html>

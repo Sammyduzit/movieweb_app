@@ -1,46 +1,112 @@
-<!-- templates/leaderboard.html -->
 {% extends "base.html" %}
 
-{% block title %}{{ title }} - MovieWeb App{% endblock %}
+{% block title %}{{ title }} - Hall of Fame - MovieWeb Gaming{% endblock %}
+
+{% block description %}Check out the ultimate movie trivia champions and see who rules the leaderboard!{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-leaderboard.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Header -->
-    <div class="leaderboard-header">
-        <h1 class="leaderboard-title">{{ title }}</h1>
+<div class="leaderboard-arena">
+    <div class="leaderboard-container">
+        <!-- Header -->
+        <div class="leaderboard-header float-up opacity-0">
+            <h1 class="leaderboard-title">
+                🏆 HALL OF FAME 🏆
+            </h1>
+            <p class="leaderboard-subtitle">
+                {{ title }}
+            </p>
 
-        <!-- Navigation Tabs -->
-        <div class="leaderboard-tabs">
-            <a href="{{ url_for('trivia.global_leaderboard') }}"
-               class="tab {% if leaderboard_type == 'global' %}active{% endif %}">
-                🏆 Global
-            </a>
-            <a href="{{ url_for('trivia.collection_leaderboard') }}"
-               class="tab {% if leaderboard_type == 'collection' %}active{% endif %}">
-                🎯 Collection
-            </a>
-            {% if leaderboard_type == 'movie' and movie %}
-                <a href="#" class="tab active">🎬 {{ movie.title | truncate_text(20) }}</a>
-            {% endif %}
+            <!-- Navigation Tabs -->
+            <div class="leaderboard-tabs">
+                <a href="{{ url_for('trivia.global_leaderboard') }}"
+                   class="leaderboard-tab {% if leaderboard_type == 'global' %}active{% endif %}">
+                    🏆 Global Champions
+                </a>
+                <a href="{{ url_for('trivia.collection_leaderboard') }}"
+                   class="leaderboard-tab {% if leaderboard_type == 'collection' %}active{% endif %}">
+                    🎯 Collection Masters
+                </a>
+                {% if leaderboard_type == 'movie' and movie %}
+                    <span class="leaderboard-tab active">
+                        🎬 {{ movie.title | truncate_text(20) }}
+                    </span>
+                {% endif %}
+            </div>
         </div>
-    </div>
 
-    <!-- Leaderboard Content -->
-    {% if leaderboard %}
-        <div class="leaderboard-content">
+        {% if leaderboard %}
+            <!-- Podium for Top 3 -->
+            {% if leaderboard | length >= 3 %}
+            <div class="podium-section">
+                <div class="podium-container">
+                    <!-- 2nd Place -->
+                    {% set second_place = leaderboard[1] %}
+                    <div class="podium-place second">
+                        <div class="podium-rank">🥈</div>
+                        <div class="podium-player">
+                            <div class="podium-name">{{ second_place.user_name | truncate_text(15) }}</div>
+                            <div class="podium-score">{{ second_place.score }}/{{ second_place.total_questions }}</div>
+                            <div class="podium-details">{{ second_place.percentage }}% Perfect</div>
+                        </div>
+                    </div>
+
+                    <!-- 1st Place -->
+                    {% set first_place = leaderboard[0] %}
+                    <div class="podium-place first">
+                        <div class="podium-rank">🥇</div>
+                        <div class="podium-player">
+                            <div class="podium-name">{{ first_place.user_name | truncate_text(15) }}</div>
+                            <div class="podium-score">{{ first_place.score }}/{{ first_place.total_questions }}</div>
+                            <div class="podium-details">{{ first_place.percentage }}% LEGEND</div>
+                        </div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                    {% set third_place = leaderboard[2] %}
+                    <div class="podium-place third">
+                        <div class="podium-rank">🥉</div>
+                        <div class="podium-player">
+                            <div class="podium-name">{{ third_place.user_name | truncate_text(15) }}</div>
+                            <div class="podium-score">{{ third_place.score }}/{{ third_place.total_questions }}</div>
+                            <div class="podium-details">{{ third_place.percentage }}% Elite</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Full Leaderboard -->
+            {% if leaderboard | length > 3 %}
+                <div class="section">
+                    <h2 class="section-title gaming-font">
+                        🎖️ FULL RANKINGS 🎖️
+                    </h2>
+                </div>
+            {% endif %}
+
             <div class="leaderboard-list">
                 {% for entry in leaderboard %}
-                    {% set rank_info = get_rank_display(loop.index) %}
-                    <div class="leaderboard-entry {{ rank_info.class }}">
+                    {% if loop.index > 3 or leaderboard | length <= 3 %}
+                    <div class="leaderboard-entry rank-{{ loop.index }}">
                         <!-- Rank Badge -->
-                        <div class="rank-badge">{{ rank_info.emoji }}</div>
+                        <div class="rank-badge">
+                            {% if loop.index <= 10 %}
+                                {{ loop.index }}
+                            {% else %}
+                                #{{ loop.index }}
+                            {% endif %}
+                        </div>
 
-                        <!-- User Info -->
-                        <div class="user-info">
-                            <div class="user-name">{{ entry.user_name | truncate_text(30) }}</div>
-                            <div class="entry-details">
+                        <!-- Player Info -->
+                        <div class="player-info">
+                            <div class="player-name">{{ entry.user_name | truncate_text(25) }}</div>
+                            <div class="player-details">
                                 {% set trivia_info = format_trivia_type(entry.trivia_type) %}
-                                <span class="trivia-type {{ trivia_info.class }}">
+                                <span class="trivia-type-badge trivia-type-{{ entry.trivia_type }}">
                                     {{ trivia_info.emoji }} {{ trivia_info.text }}
                                 </span>
                                 <span class="entry-date">{{ entry.created_at | format_date('short') }}</span>
@@ -56,39 +122,219 @@
                         <!-- Performance Badge -->
                         <div class="performance-indicator">
                             {% set performance = get_performance_badge(entry.percentage) %}
-                            <span class="badge {{ performance.class }}">{{ performance.text }}</span>
+                            <span class="performance-badge performance-{{ performance.class }}">
+                                {{ performance.emoji }} {{ performance.text }}
+                            </span>
                         </div>
                     </div>
+                    {% endif %}
                 {% endfor %}
             </div>
-        </div>
-    {% else %}
-        <div class="no-scores">
-            <div class="empty-state">
-                <div class="empty-icon">🏆</div>
-                <h3>No Scores Yet!</h3>
-                <p>Be the first to complete a trivia and claim the top spot!</p>
-                {% if leaderboard_type == 'movie' %}
-                    <a href="{{ url_for('trivia.movie_trivia', user_id=movie.user_id, movie_id=movie.id) }}" 
-                       class="btn btn-primary">🧠 Play Movie Trivia</a>
-                {% else %}
-                    <a href="{{ url_for('users.list_users') }}" class="btn btn-primary">🎬 Find Movies to Play</a>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
-    
-    <!-- Back Navigation -->
-    <div class="leaderboard-actions">
-        {% if back_url %}
-            <a href="{{ back_url }}" class="btn btn-secondary">🔙 Back</a>
+
         {% else %}
-            <a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">👥 All Users</a>
+            <!-- Empty State -->
+            <div class="leaderboard-empty">
+                <div class="gaming-card" style="max-width: 600px; margin: 0 auto; padding: 3rem;">
+                    <div class="empty-trophy">🏆</div>
+                    <h3 class="empty-title">NO CHAMPIONS YET!</h3>
+                    <p class="empty-description">
+                        Be the first to complete a trivia and claim the throne!
+                    </p>
+                    {% if leaderboard_type == 'movie' and movie %}
+                        <a href="{{ url_for('trivia.movie_trivia', user_id=movie.user_id, movie_id=movie.id) }}"
+                           class="trivia-btn btn-lg pulse-btn">
+                            🧠 START MOVIE BATTLE
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('users.list_users') }}" class="trivia-btn btn-lg pulse-btn">
+                            🎬 FIND BATTLES
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
         {% endif %}
-        
-        {% if leaderboard_type != 'global' %}
-            <a href="{{ url_for('trivia.global_leaderboard') }}" class="btn btn-primary">🏆 Global Leaderboard</a>
-        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="section" style="text-align: center; margin-top: 4rem;">
+            {% if back_url %}
+                <a href="{{ back_url }}" class="neon-btn btn-lg">🔙 BACK TO BATTLE</a>
+            {% else %}
+                <a href="{{ url_for('users.list_users') }}" class="neon-btn btn-lg">👥 ALL PLAYERS</a>
+            {% endif %}
+
+            {% if leaderboard_type != 'global' %}
+                <a href="{{ url_for('trivia.global_leaderboard') }}" class="trivia-btn btn-lg">
+                    🏆 GLOBAL CHAMPIONS
+                </a>
+            {% endif %}
+
+            <a href="{{ url_for('users.list_users') }}" class="neon-btn btn-lg">
+                🎮 START NEW BATTLE
+            </a>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate podium entrance
+        const podiumPlaces = document.querySelectorAll('.podium-place');
+        podiumPlaces.forEach((place, index) => {
+            setTimeout(() => {
+                place.style.opacity = '1';
+                place.style.transform = 'translateY(0) scale(1)';
+            }, 200 + (index * 200));
+        });
+
+        // Animate score counting
+        const scores = document.querySelectorAll('.podium-score, .score-main');
+        scores.forEach(scoreElement => {
+            const finalScore = scoreElement.textContent;
+            const scoreMatch = finalScore.match(/(\d+)/);
+            if (scoreMatch) {
+                const targetNumber = parseInt(scoreMatch[1]);
+                let currentNumber = 0;
+
+                const increment = Math.ceil(targetNumber / 20);
+                const timer = setInterval(() => {
+                    currentNumber += increment;
+                    if (currentNumber >= targetNumber) {
+                        currentNumber = targetNumber;
+                        clearInterval(timer);
+                    }
+
+                    if (scoreElement.classList.contains('podium-score')) {
+                        const parts = finalScore.split('/');
+                        scoreElement.textContent = currentNumber + '/' + parts[1];
+                    } else {
+                        scoreElement.textContent = finalScore.replace(/\d+/, currentNumber);
+                    }
+                }, 50);
+            }
+        });
+
+        // Add crown floating animation to #1
+        const firstPlace = document.querySelector('.podium-place.first .podium-rank');
+        if (firstPlace) {
+            setInterval(() => {
+                firstPlace.style.transform = 'translateY(-5px) rotate(5deg)';
+                setTimeout(() => {
+                    firstPlace.style.transform = 'translateY(0px) rotate(0deg)';
+                }, 1000);
+            }, 3000);
+        }
+
+        // Leaderboard entry hover effects
+        const entries = document.querySelectorAll('.leaderboard-entry');
+        entries.forEach(entry => {
+            entry.addEventListener('mouseenter', function() {
+                const rankBadge = this.querySelector('.rank-badge');
+                if (rankBadge) {
+                    rankBadge.style.transform = 'scale(1.1) rotate(5deg)';
+                }
+            });
+
+            entry.addEventListener('mouseleave', function() {
+                const rankBadge = this.querySelector('.rank-badge');
+                if (rankBadge) {
+                    rankBadge.style.transform = 'scale(1) rotate(0deg)';
+                }
+            });
+        });
+
+        // Add random glow effects to performance badges
+        const performanceBadges = document.querySelectorAll('.performance-master');
+        performanceBadges.forEach(badge => {
+            setInterval(() => {
+                badge.style.boxShadow = '0 0 30px rgba(139, 92, 246, 0.8)';
+                setTimeout(() => {
+                    badge.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                }, 1000);
+            }, 4000 + Math.random() * 2000);
+        });
+
+        // Celebration effect for top performers
+        function createConfetti() {
+            const confettiColors = ['#ffd700', '#ff006e', '#00ffff', '#ff9a00'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+
+                document.body.appendChild(confetti);
+
+                // Animate confetti fall
+                const fallDuration = 3000 + Math.random() * 2000;
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 100}px) rotate(720deg)`, opacity: 0 }
+                ], {
+                    duration: fallDuration,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => {
+                    confetti.remove();
+                };
+            }
+        }
+
+        // Trigger confetti for perfect scores
+        const perfectScores = document.querySelectorAll('.score-percentage');
+        perfectScores.forEach(scoreElement => {
+            if (scoreElement.textContent.includes('100%')) {
+                setTimeout(createConfetti, 2000);
+            }
+        });
+
+        // Tab switching animation
+        const tabs = document.querySelectorAll('.leaderboard-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                if (!this.classList.contains('active')) {
+                    // Add loading animation
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            });
+        });
+
+        // Add gaming atmosphere
+        function addRandomGlow() {
+            const leaderboardTitle = document.querySelector('.leaderboard-title');
+            if (leaderboardTitle) {
+                const colors = ['#ffd700', '#ffed4e', '#ffa500'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                leaderboardTitle.style.textShadow = `0 0 30px ${randomColor}`;
+
+                setTimeout(() => {
+                    leaderboardTitle.style.textShadow = '0 0 10px #ffd700';
+                }, 2000);
+            }
+        }
+
+        // Add glow every 8 seconds
+        setInterval(addRandomGlow, 8000);
+
+        // Performance badge click effects
+        const badges = document.querySelectorAll('.performance-badge');
+        badges.forEach(badge => {
+            badge.addEventListener('click', function() {
+                this.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 200);
+            });
+        });
+    });
+</script>
 {% endblock %}

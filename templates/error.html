@@ -1,122 +1,681 @@
-<!-- templates/error.html -->
 {% extends "base.html" %}
 
-{% block title %}Error {{ error_code }} - MovieWeb App{% endblock %}
+{% block title %}{{ error_code }} Error - Game Over - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+An error occurred in the MovieWeb Gaming arena. Don't worry, every hero faces setbacks!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-error.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div style="text-align: center; padding: 3rem;">
-        <h1 class="page-title" style="color: #e74c3c; font-size: 4rem; margin-bottom: 1rem;">
-            {{ error_code }}
-        </h1>
+<div class="error-arena error-{{ error_code }}">
+    <!-- Matrix Rain Background -->
+    <div class="matrix-rain" id="matrixRain"></div>
+    
+    <div class="error-container">
+        <!-- Console Frame -->
+        <div class="console-frame">
+            <!-- Error Code Display -->
+            <div class="error-code" data-text="{{ error_code }}">
+                {{ error_code }}
+            </div>
 
-        <div style="font-size: 4rem; margin-bottom: 2rem;">
-            {% if error_code == 404 %}
-                🔍
-            {% elif error_code == 403 %}
-                🚫
-            {% elif error_code == 500 %}
-                ⚠️
-            {% elif error_code == 503 %}
-                🔧
-            {% else %}
-                ❌
-            {% endif %}
-        </div>
+            <!-- Error Mascot -->
+            <div class="error-mascot"></div>
 
-        <div style="margin: 2rem 0;">
-            <h2 style="color: #2c3e50; margin-bottom: 1rem;">
+            <!-- Error Messages -->
+            <h1 class="error-title">
                 {% if error_code == 404 %}
                     Page Not Found
+                {% elif error_code == 500 %}
+                    Server Error
                 {% elif error_code == 403 %}
-                    Access Forbidden
+                    Access Denied
                 {% elif error_code == 400 %}
                     Bad Request
                 {% elif error_code == 405 %}
                     Method Not Allowed
-                {% elif error_code == 500 %}
-                    Internal Server Error
                 {% elif error_code == 503 %}
                     Service Unavailable
                 {% else %}
-                    Something Went Wrong
+                    System Error
                 {% endif %}
-            </h2>
-            <p style="color: #7f8c8d; font-size: 1.2rem;">{{ error_message }}</p>
-        </div>
+            </h1>
 
-        <!-- Helpful Description -->
-        <div style="margin: 2rem 0; max-width: 600px; margin-left: auto; margin-right: auto;">
-            {% if error_code == 404 %}
-                <p style="color: #7f8c8d;">The page you're looking for might have been moved, deleted, or the URL was mistyped.</p>
-            {% elif error_code == 403 %}
-                <p style="color: #7f8c8d;">You don't have permission to access this resource. Please check your credentials.</p>
-            {% elif error_code == 400 %}
-                <p style="color: #7f8c8d;">The request contained invalid data. Please check your input and try again.</p>
-            {% elif error_code == 405 %}
-                <p style="color: #7f8c8d;">The HTTP method used is not allowed for this endpoint.</p>
-            {% elif error_code == 500 %}
-                <p style="color: #7f8c8d;">We're experiencing technical difficulties. Our team has been notified.</p>
-            {% elif error_code == 503 %}
-                <p style="color: #7f8c8d;">Our services are temporarily down for maintenance. Please try again in a few minutes.</p>
-            {% endif %}
-        </div>
+            <p class="error-subtitle">
+                {% if error_code == 404 %}
+                    🔍 The page you're looking for has vanished into the digital void!
+                {% elif error_code == 500 %}
+                    ⚠️ Our servers encountered a critical error in the matrix!
+                {% elif error_code == 403 %}
+                    🚫 You don't have the required access level for this area!
+                {% elif error_code == 400 %}
+                    ❌ The request data was corrupted during transmission!
+                {% elif error_code == 405 %}
+                    🚧 This method is not supported in this gaming zone!
+                {% elif error_code == 503 %}
+                    🔧 The gaming servers are temporarily offline for maintenance!
+                {% else %}
+                    💥 An unexpected error occurred in the gaming system!
+                {% endif %}
+            </p>
 
-        <div class="item-actions" style="justify-content: center; margin-top: 3rem;">
-            {% if home_url %}
-                <a href="{{ home_url }}" class="btn btn-primary">
-                    🏠 Go to Homepage
-                </a>
-            {% endif %}
-
-            {% if back_url and back_url != request.url %}
-                <a href="{{ back_url }}" class="btn btn-secondary">
-                    ← Go Back
-                </a>
-            {% else %}
-                <a href="javascript:history.back()" class="btn btn-secondary">
-                    ← Go Back
-                </a>
-            {% endif %}
-
-            {% if error_code == 404 %}
-                <a href="{{ url_for('users.list_users') }}" class="btn btn-success">
-                    👥 Browse Users
-                </a>
-                <a href="{{ url_for('trivia.global_leaderboard') }}" class="btn btn-warning">
-                    🏆 View Leaderboard
-                </a>
-            {% endif %}
-        </div>
-
-        <!-- Easter Egg -->
-        {% if error_code == 404 %}
-            <div style="margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 8px; max-width: 500px; margin-left: auto; margin-right: auto;">
-                <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎬 Movie Quote of the Day</h3>
-                <p style="color: #7f8c8d; font-style: italic; font-size: 1.1rem;">
-                    {% set quotes = [
-                        '"I feel the need... the need for speed!" - Top Gun',
-                        '"May the Force be with you." - Star Wars',
-                        '"Here\'s looking at you, kid." - Casablanca',
-                        '"I\'ll be back." - The Terminator',
-                        '"Life is like a box of chocolates..." - Forrest Gump'
-                    ] %}
-                    {{ quotes | random }}
-                </p>
+            <div class="error-description">
+                {% if error_code == 404 %}
+                    The URL you entered might be mistyped, or the page may have been moved to another dimension. 
+                    Our digital scouts are constantly mapping new territories, but this one seems to be off the grid.
+                {% elif error_code == 500 %}
+                    Our gaming servers hit a snag while processing your request. The tech team has been notified 
+                    and is working to restore full functionality to the MovieWeb gaming matrix.
+                {% elif error_code == 403 %}
+                    This area requires special clearance. You might need to log in or check your user permissions 
+                    to access this exclusive gaming content.
+                {% else %}
+                    {{ error_message or "An unexpected error occurred while processing your request. Our team is investigating the issue." }}
+                {% endif %}
             </div>
-        {% endif %}
 
-        {% if config.DEBUG and error_code == 500 %}
-            <details style="margin-top: 2rem; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
-                <summary style="cursor: pointer; color: #e74c3c; font-weight: bold;">🔧 Technical Details (Debug Mode)</summary>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem; font-family: monospace; font-size: 0.9rem;">
-                    <p><strong>URL:</strong> {{ request.url }}</p>
-                    <p><strong>Method:</strong> {{ request.method }}</p>
-                    <p><strong>User Agent:</strong> {{ request.headers.get('User-Agent', 'Unknown') }}</p>
-                    <p><strong>Timestamp:</strong> {{ moment().format('YYYY-MM-DD HH:mm:ss') if moment else 'Unknown' }}</p>
+            <!-- Game Over Screen -->
+            <div class="game-over">
+                <div class="game-over-text">Game Over</div>
+                <div class="game-over-score">
+                    Error Code: {{ error_code }} | 
+                    Timestamp: {{ moment().format('HH:mm:ss') if moment else 'Unknown' }}
                 </div>
-            </details>
-        {% endif %}
+            </div>
+
+            <!-- Movie Quote Easter Egg -->
+            <div class="movie-quote">
+                <div class="quote-text">
+                    {% set error_quotes = {
+                        404: [
+                            '"I have a feeling we\'re not in Kansas anymore." - The Wizard of Oz',
+                            '"Nobody puts Baby in a corner... or finds this page." - Dirty Dancing',
+                            '"Houston, we have a problem... we can\'t find this page." - Apollo 13'
+                        ],
+                        500: [
+                            '"I\'ll be back... after we fix this server." - The Terminator',
+                            '"Something has survived... but not our servers." - Jurassic Park',
+                            '"I feel the need... the need to restart!" - Top Gun'
+                        ],
+                        403: [
+                            '"You shall not pass!" - The Lord of the Rings',
+                            '"Access denied, Mr. Anderson." - The Matrix',
+                            '"I\'m sorry, Dave. I\'m afraid I can\'t do that." - 2001: A Space Odyssey'
+                        ]
+                    } %}
+                    
+                    {% set quotes = error_quotes.get(error_code, [
+                        '"May the Force be with you... and with our servers." - Star Wars',
+                        '"After all this time? Always... broken." - Harry Potter',
+                        '"Frankly, my dear, I don\'t give a damn... about this error." - Gone with the Wind'
+                    ]) %}
+                    
+                    {{ quotes | random }}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="error-actions">
+                {% if home_url %}
+                    <a href="{{ home_url }}" class="error-action action-home">
+                        <span>🏠</span>
+                        <span>Return Home</span>
+                    </a>
+                {% endif %}
+
+                {% if back_url and back_url != request.url %}
+                    <a href="{{ back_url }}" class="error-action action-back">
+                        <span>⬅️</span>
+                        <span>Go Back</span>
+                    </a>
+                {% else %}
+                    <a href="javascript:history.back()" class="error-action action-back">
+                        <span>⬅️</span>
+                        <span>Go Back</span>
+                    </a>
+                {% endif %}
+
+                {% if error_code in [500, 503] %}
+                    <a href="javascript:window.location.reload()" class="error-action action-retry">
+                        <span>🔄</span>
+                        <span>Retry</span>
+                    </a>
+                {% endif %}
+
+                <a href="{{ url_for('users.list_users') }}" class="error-action action-home">
+                    <span>🎮</span>
+                    <span>Gaming Arena</span>
+                </a>
+
+                <a href="{{ url_for('trivia.global_leaderboard') }}" class="error-action action-back">
+                    <span>🏆</span>
+                    <span>Leaderboard</span>
+                </a>
+            </div>
+
+            <!-- Technical Information (Debug Mode) -->
+            {% if config.DEBUG and error_code in [500, 400, 405] %}
+            <div class="error-tech-info">
+                <div class="tech-info-title">🔧 Debug Information</div>
+                <div class="tech-info-content">
+                    URL: {{ request.url }}<br>
+                    Method: {{ request.method }}<br>
+                    User Agent: {{ request.headers.get('User-Agent', 'Unknown')[:50] }}...<br>
+                    Timestamp: {{ moment().format('YYYY-MM-DD HH:mm:ss') if moment else 'Unknown' }}<br>
+                    {% if error_code == 500 %}
+                    Status: Internal Server Error - Check server logs for details<br>
+                    {% elif error_code == 400 %}
+                    Status: Bad Request - Invalid data received<br>
+                    {% elif error_code == 405 %}
+                    Status: Method Not Allowed - {{ request.method }} not supported<br>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Matrix rain effect
+        function createMatrixRain() {
+            const container = document.getElementById('matrixRain');
+            if (!container) return;
+            
+            const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ404500ERROR{}[]()<>!@#$%^&*';
+            const columns = Math.floor(window.innerWidth / 20);
+            
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.className = 'rain-column';
+                column.style.left = (i * 20) + 'px';
+                column.style.animationDelay = Math.random() * 3 + 's';
+                column.style.animationDuration = (3 + Math.random() * 2) + 's';
+                
+                // Create random character string
+                let text = '';
+                for (let j = 0; j < 20; j++) {
+                    text += chars[Math.floor(Math.random() * chars.length)] + '<br>';
+                }
+                column.innerHTML = text;
+                
+                container.appendChild(column);
+            }
+        }
+        
+        // Initialize matrix rain
+        createMatrixRain();
+        
+        // Glitch sound effect (placeholder)
+        function playGlitchSound() {
+            console.log('🎵 Glitch sound effect!');
+        }
+        
+        // Error code click effects
+        const errorCode = document.querySelector('.error-code');
+        if (errorCode) {
+            errorCode.addEventListener('click', function() {
+                playGlitchSound();
+                
+                // Extra glitch effect
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = 'errorGlitch 0.5s ease-in-out, gradientShift 3s ease infinite';
+                }, 10);
+            });
+        }
+        
+        // Action button effects
+        const actionButtons = document.querySelectorAll('.error-action');
+        actionButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-3px) scale(1)';
+            });
+            
+            button.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+        
+        // Konami code for Easter egg
+        let konamiCode = [];
+        const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]; // ↑↑↓↓←→←→BA
+        
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.keyCode);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+            
+            if (konamiCode.join(',') === konamiSequence.join(',')) {
+                // Easter egg activated!
+                activateEasterEgg();
+            }
+        });
+        
+        function activateEasterEgg() {
+            // Change page colors
+            document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+            
+            // Add special message
+            const specialMessage = document.createElement('div');
+            specialMessage.innerHTML = '🎊 CHEAT CODE ACTIVATED! 🎊<br>You found the secret developer mode!';
+            specialMessage.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(45deg, #ff006e, #8338ec);
+                color: white;
+                padding: 2rem;
+                border-radius: 1rem;
+                z-index: 9999;
+                text-align: center;
+                font-family: 'Orbitron', monospace;
+                font-weight: bold;
+                animation: errorPulse 1s ease-in-out infinite;
+            `;
+            document.body.appendChild(specialMessage);
+            
+            setTimeout(() => {
+                document.body.style.filter = '';
+                specialMessage.remove();
+            }, 3000);
+            
+            console.log('🎮 Easter egg activated! You are a true gamer!');
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // R = Retry (for 500/503 errors)
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) {
+                const retryBtn = document.querySelector('.action-retry');
+                if (retryBtn) {
+                    window.location.reload();
+                }
+            }
+            
+            // H = Home
+            if (e.key === 'h' || e.key === 'H') {
+                const homeBtn = document.querySelector('.action-home');
+                if (homeBtn) {
+                    window.location.href = homeBtn.href;
+                }
+            }
+            
+            // Escape = Back
+            if (e.key === 'Escape') {
+                history.back();
+            }
+        });
+        
+        // Console log Easter egg
+        console.log(`
+    ╔═══════════════════════════════════════╗
+    ║        🎮 MOVIEWEB GAMING ERROR 🎮    ║
+    ║                                       ║
+    ║  Error ${document.querySelector('.error-code').textContent} - But don't give up!           ║
+    ║                                       ║
+    ║  Every great gamer faces setbacks.    ║
+    ║  Press R to retry, H for home,        ║
+    ║  or try the Konami code for a         ║
+    ║  special surprise! ↑↑↓↓←→←→BA         ║
+    ║                                       ║
+    ║  Happy gaming! 🎬🎮                   ║
+    ╚═══════════════════════════════════════╝
+        `);
+        
+        // Random glitch effects
+        function randomGlitch() {
+            const elements = document.querySelectorAll('.error-title, .error-subtitle');
+            const randomElement = elements[Math.floor(Math.random() * elements.length)];
+            
+            if (randomElement) {
+                randomElement.style.animation = 'errorGlitch 0.3s ease-in-out';
+                setTimeout(() => {
+                    randomElement.style.animation = '';
+                }, 300);
+            }
+        }
+        
+        // Add random glitch every 10-15 seconds
+        setInterval(randomGlitch, 10000 + Math.random() * 5000);
+        
+        // Movie quote click effect
+        const movieQuote = document.querySelector('.movie-quote');
+        if (movieQuote) {
+            movieQuote.addEventListener('click', function() {
+                this.style.transform = 'scale(1.02)';
+                this.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                        this.style.boxShadow = '';
+                    }, 200);
+                });
+            }
+
+            // Add tooltip effects to technical info
+            const techInfoTitle = document.querySelector('.tech-info-title');
+            if (techInfoTitle) {
+                techInfoTitle.addEventListener('mouseenter', function() {
+                    this.style.color = '#67e8f9';
+                    this.style.textShadow = '0 0 10px #67e8f9';
+                });
+
+                techInfoTitle.addEventListener('mouseleave', function() {
+                    this.style.color = '#94a3b8';
+                    this.style.textShadow = '';
+                });
+            }
+
+            // Random error mascot changes for fun
+            {% if error_code == 404 %}
+            const mascotOptions = ['🔍', '🕵️', '🗺️', '❓', '🌌'];
+            {% elif error_code == 500 %}
+            const mascotOptions = ['⚠️', '🔧', '⚡', '💥', '🛠️'];
+            {% elif error_code == 403 %}
+            const mascotOptions = ['🚫', '🔒', '🛡️', '⛔', '🚪'];
+            {% else %}
+            const mascotOptions = ['💥', '🔥', '💀', '⚡', '🌪️'];
+            {% endif %}
+
+            if (mascot) {
+                setInterval(() => {
+                    const randomMascot = mascotOptions[Math.floor(Math.random() * mascotOptions.length)];
+                    mascot.textContent = randomMascot;
+                }, 8000);
+            }
+
+            // Add retry functionality for 500/503 errors
+            {% if error_code in [500, 503] %}
+            function autoRetry() {
+                let countdown = 30;
+                const retryMessage = document.createElement('div');
+                retryMessage.innerHTML = `🔄 Auto-retry in <span id="countdown">${countdown}</span> seconds...`;
+                retryMessage.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 20px;
+                    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+                    color: white;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                    font-family: 'Orbitron', monospace;
+                    font-weight: bold;
+                    z-index: 9999;
+                    border: 2px solid #67e8f9;
+                    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+                `;
+
+                document.body.appendChild(retryMessage);
+
+                const countdownEl = document.getElementById('countdown');
+                const timer = setInterval(() => {
+                    countdown--;
+                    if (countdownEl) countdownEl.textContent = countdown;
+
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        window.location.reload();
+                    }
+                }, 1000);
+
+                // Allow manual cancel
+                retryMessage.addEventListener('click', () => {
+                    clearInterval(timer);
+                    retryMessage.remove();
+                });
+            }
+
+            // Start auto-retry after 5 seconds
+            setTimeout(autoRetry, 5000);
+            {% endif %}
+
+            // Add loading spinner for navigation
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.href && !this.href.includes('javascript:')) {
+                        const spinner = document.createElement('div');
+                        spinner.innerHTML = '🔄 Loading...';
+                        spinner.style.cssText = `
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background: rgba(0, 0, 0, 0.9);
+                            color: #67e8f9;
+                            padding: 2rem;
+                            border-radius: 1rem;
+                            font-family: 'Orbitron', monospace;
+                            font-weight: bold;
+                            z-index: 10000;
+                            border: 2px solid #67e8f9;
+                            animation: pulse 1s infinite;
+                        `;
+                        document.body.appendChild(spinner);
+                    }
+                });
+            });
+
+            // Performance monitoring for debugging
+            const performanceInfo = {
+                loadTime: performance.now(),
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                errorCode: {{ error_code }},
+                screenSize: `${window.screen.width}x${window.screen.height}`,
+                language: navigator.language
+            };
+
+            console.log('🔧 Error Page Performance Info:', performanceInfo);
+
+            // Add easter egg for developers
+            console.log(`
+    ╔═══════════════════════════════════════╗
+    ║        🚀 MOVIEWEB GAMING ERROR 🚀    ║
+    ║                                       ║
+    ║  Error {{ error_code }} encountered - but don't worry!  ║
+    ║                                       ║
+    ║  Our gaming systems are designed to   ║
+    ║  handle any challenge. This is just   ║
+    ║  another level to overcome!           ║
+    ║                                       ║
+    ║  Press F12 for developer tools,       ║
+    ║  or use keyboard shortcuts:           ║
+    ║  • R = Retry                         ║
+    ║  • H = Home                          ║
+    ║  • L = Leaderboard                   ║
+    ║  • ESC = Go back                     ║
+    ║                                       ║
+    ║  Keep gaming! 🎮🎬                    ║
+    ╚═══════════════════════════════════════╝
+            `);
+
+            // Add visual feedback for successful interactions
+            function showSuccessFeedback(element, message) {
+                const feedback = document.createElement('div');
+                feedback.textContent = message;
+                feedback.style.cssText = `
+                    position: absolute;
+                    top: -30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #10b981;
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.5rem;
+                    font-size: 0.875rem;
+                    font-weight: bold;
+                    pointer-events: none;
+                    z-index: 1000;
+                `;
+
+                element.style.position = 'relative';
+                element.appendChild(feedback);
+
+                feedback.animate([
+                    { opacity: 0, transform: 'translateX(-50%) translateY(10px)' },
+                    { opacity: 1, transform: 'translateX(-50%) translateY(0px)' },
+                    { opacity: 0, transform: 'translateX(-50%) translateY(-10px)' }
+                ], {
+                    duration: 2000,
+                    easing: 'ease-out'
+                }).onfinish = () => feedback.remove();
+            }
+
+            // Add success feedback to action buttons
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    showSuccessFeedback(this, '✅ Navigating...');
+                });
+            });
+
+            // Special effects for certain error codes
+            {% if error_code == 404 %}
+            // 404 - Page Not Found special effects
+            function create404Portal() {
+                const portal = document.createElement('div');
+                portal.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 200px;
+                    height: 200px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, transparent 30%, rgba(59, 130, 246, 0.3) 70%);
+                    border: 3px solid #3b82f6;
+                    animation: portalSpin 4s linear infinite;
+                    pointer-events: none;
+                    z-index: -1;
+                `;
+
+                document.body.appendChild(portal);
+
+                // Remove after animation
+                setTimeout(() => portal.remove(), 4000);
+            }
+
+            // Create portal effect every 15 seconds
+            setInterval(create404Portal, 15000);
+
+            // Add portal spin animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes portalSpin {
+                    0% { transform: translate(-50%, -50%) rotate(0deg) scale(0); opacity: 0; }
+                    50% { transform: translate(-50%, -50%) rotate(180deg) scale(1); opacity: 1; }
+                    100% { transform: translate(-50%, -50%) rotate(360deg) scale(0); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            {% elif error_code == 500 %}
+            // 500 - Server Error special effects
+            function createErrorSpark() {
+                for (let i = 0; i < 5; i++) {
+                    const spark = document.createElement('div');
+                    spark.style.cssText = `
+                        position: fixed;
+                        top: ${Math.random() * 100}vh;
+                        left: ${Math.random() * 100}vw;
+                        width: 4px;
+                        height: 4px;
+                        background: #ef4444;
+                        border-radius: 50%;
+                        pointer-events: none;
+                        z-index: 1000;
+                    `;
+
+                    document.body.appendChild(spark);
+
+                    spark.animate([
+                        { transform: 'scale(0)', opacity: 1 },
+                        { transform: 'scale(3)', opacity: 0 }
+                    ], {
+                        duration: 1000,
+                        easing: 'ease-out'
+                    }).onfinish = () => spark.remove();
+                }
+            }
+
+            // Create sparks every 3 seconds
+            setInterval(createErrorSpark, 3000);
+            {% endif %}
+
+            // Accessibility improvements
+            const focusableElements = document.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])');
+            let currentFocus = 0;
+
+            document.addEventListener('keydown', function(e) {
+                // Tab navigation enhancement
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+
+                    if (e.shiftKey) {
+                        currentFocus = currentFocus <= 0 ? focusableElements.length - 1 : currentFocus - 1;
+                    } else {
+                        currentFocus = currentFocus >= focusableElements.length - 1 ? 0 : currentFocus + 1;
+                    }
+
+                    if (focusableElements[currentFocus]) {
+                        focusableElements[currentFocus].focus();
+                    }
+                }
+
+                // Enhanced keyboard shortcuts with visual feedback
+                if (e.key === 'h' || e.key === 'H') {
+                    const homeBtn = document.querySelector('.action-home');
+                    if (homeBtn) {
+                        homeBtn.style.animation = 'pulse 0.3s ease';
+                        setTimeout(() => {
+                            homeBtn.style.animation = '';
+                            window.location.href = homeBtn.href;
+                        }, 300);
+                    }
+                }
+            });
+
+            // Add ARIA labels for better accessibility
+            actionButtons.forEach((button, index) => {
+                button.setAttribute('aria-label', `Error page action: ${button.textContent.trim()}`);
+                button.setAttribute('tabindex', index + 1);
+            });
+
+            // Final initialization complete message
+            console.log('🎮 Error page fully initialized! Gaming error handling active.');
+
+            // Add completion indicator
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                width: 10px;
+                height: 10px;
+                background: #10b981;
+                border-radius: 50%;
+                box-shadow: 0 0 10px #10b981;
+                z-index: 9999;
+                animation: pulse 2s ease-in-out infinite;
+            `;
+            indicator.title = 'Error page systems online';
+            document.body.appendChild(indicator);
+        });
+    </script>
 {% endblock %}

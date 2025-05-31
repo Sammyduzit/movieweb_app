@@ -1,64 +1,454 @@
-<!-- templates/trivia_results.html -->
 {% extends "base.html" %}
 
-{% block title %}Trivia Results - MovieWeb App{% endblock %}
+{% block title %}
+🏆 Battle Complete - {{ results.score }}/{{ results.total }} ({{ format_percentage(results.score, results.total) }}%) - MovieWeb Gaming
+{% endblock %}
+
+{% block description %}
+Your epic trivia battle is complete! See your results and challenge yourself again.
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-trivia-results.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Results Header -->
-    <div class="results-header">
-        {% set trivia_info = format_trivia_type(results.type) %}
-        <h1 class="results-title">
-            {{ trivia_info.emoji }} {{ trivia_info.text }} Complete!
-        </h1>
+<div class="results-arena">
+    <!-- Fireworks Container -->
+    <div class="fireworks-container" id="fireworksContainer"></div>
 
-        <div class="score-display">
-            <div class="score-circle">
-                <div class="score-number">{{ results.score }}/{{ results.total }}</div>
-                <div class="score-percentage">{{ format_percentage(results.score, results.total) }}%</div>
-            </div>
-            {% set performance = get_performance_badge(format_percentage(results.score, results.total)) %}
-            <div class="performance-badge">{{ performance.emoji }} {{ performance.text }}</div>
+    <div class="results-container">
+        <!-- Results Header -->
+        <div class="results-header">
+            <h1 class="results-title">
+                🏆 Battle Complete! 🏆
+            </h1>
+            <p class="results-subtitle">
+                {% if results.type == 'movie' %}
+                    🎬 Movie Trivia Conquered
+                {% else %}
+                    🎯 Collection Battle Finished
+                {% endif %}
+            </p>
         </div>
-    </div>
 
-    <!-- Detailed Results -->
-    <div class="results-details">
-        <h2>📊 Question Review</h2>
+        <!-- Score Showcase -->
+        <div class="score-showcase">
+            {% set percentage = format_percentage(results.score, results.total) %}
+            {% set performance_class = 'perfect' if percentage == 100 else 'excellent' if percentage >= 80 else 'good' if percentage >= 60 else 'okay' if percentage >= 40 else 'poor' %}
 
-        {% for answer in results.answers %}
-            <div class="answer-review {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
-                <div class="question-number">Q{{ loop.index }}</div>
-                <div class="question-content">
-                    <div class="question-text">{{ answer.question | truncate_text(200) }}</div>
+            <div class="score-circle {{ performance_class }}">
+                <div class="score-main" id="scoreCounter">0/{{ results.total }}</div>
+                <div class="score-percentage" id="percentageCounter">0%</div>
+            </div>
+
+            <!-- Performance Badge -->
+            <div class="performance-showcase">
+                {% set performance = get_performance_badge(percentage) %}
+                <div class="performance-badge-large badge-{{ performance.class }}">
+                    {{ performance.emoji }} {{ performance.text }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results -->
+        <div class="results-details">
+            <h2 class="results-section-title">
+                📊 Battle Analysis 📊
+            </h2>
+
+            <div class="questions-review">
+                {% for answer in results.answers %}
+                <div class="question-result {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
+                    <div class="question-header">
+                        <div class="question-number">{{ loop.index }}</div>
+                        <div class="question-status">
+                            {% if answer.is_correct %}
+                                ✅ CORRECT!
+                            {% else %}
+                                ❌ MISSED
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="question-text">
+                        {{ answer.question | truncate_text(200) }}
+                    </div>
 
                     <div class="answer-options">
                         {% for option in answer.options %}
-                            <div class="option-item
-                                {% if loop.index0 == answer.correct_answer %}correct-answer{% endif %}
-                                {% if loop.index0 == answer.user_answer and not answer.is_correct %}wrong-answer{% endif %}
-                                {% if loop.index0 == answer.user_answer and answer.is_correct %}user-correct{% endif %}">
-                                <span class="option-letter">{{ 'ABCD'[loop.index0] }}</span>
-                                <span class="option-text">{{ option | truncate_text(150) }}</span>
-                                {% if loop.index0 == answer.correct_answer %}✅{% endif %}
-                                {% if loop.index0 == answer.user_answer and not answer.is_correct %}❌{% endif %}
+                        <div class="answer-option
+                            {% if loop.index0 == answer.user_answer and loop.index0 == answer.correct_answer %}correct-answer user-answer
+                            {% elif loop.index0 == answer.user_answer and loop.index0 != answer.correct_answer %}wrong-answer user-answer
+                            {% elif loop.index0 == answer.correct_answer %}correct-answer
+                            {% endif %}">
+
+                            <div class="option-letter">{{ 'ABCD'[loop.index0] }}</div>
+                            <div class="option-text">{{ option | truncate_text(100) }}</div>
+                            <div class="option-status">
+                                {% if loop.index0 == answer.correct_answer %}
+                                    ✅
+                                {% elif loop.index0 == answer.user_answer and loop.index0 != answer.correct_answer %}
+                                    ❌
+                                {% endif %}
                             </div>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
+                {% endfor %}
             </div>
-        {% endfor %}
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="results-actions">
-        <a href="{{ back_url }}" class="btn btn-primary">🔙 Back</a>
-        {% if results.type == 'movie' %}
-            <a href="{{ back_url.replace('/movies/', '/movies/').replace(back_url.split('/')[-1], back_url.split('/')[-1] + '/trivia') }}" 
-               class="btn btn-success">🔄 Play Again</a>
-        {% else %}
-            <a href="{{ back_url.replace('/', '/trivia') }}" class="btn btn-success">🔄 Play Again</a>
-        {% endif %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="results-actions">
+            {% if results.type == 'movie' %}
+                <!-- Movie Trivia Actions -->
+                <a href="{{ back_url.replace('/movies/', '/movies/').replace(back_url.split('/')[-1], back_url.split('/')[-1] + '/trivia') }}"
+                   class="action-button action-again">
+                    <span>🔄</span>
+                    <span>Battle Again</span>
+                </a>
+
+                <a href="{{ back_url.replace('/movies/', '/movies/').replace(back_url.split('/')[-1], back_url.split('/')[-1] + '/leaderboard') }}"
+                   class="action-button action-leaderboard">
+                    <span>🏆</span>
+                    <span>Movie Leaderboard</span>
+                </a>
+            {% else %}
+                <!-- Collection Trivia Actions -->
+                <a href="{{ back_url.replace('/', '/trivia') }}"
+                   class="action-button action-again">
+                    <span>🔄</span>
+                    <span>Battle Again</span>
+                </a>
+
+                <a href="{{ url_for('trivia.collection_leaderboard') }}"
+                   class="action-button action-leaderboard">
+                    <span>🏆</span>
+                    <span>Collection Leaderboard</span>
+                </a>
+            {% endif %}
+
+            <a href="{{ back_url }}" class="action-button action-back">
+                <span>🔙</span>
+                <span>Back to Arena</span>
+            </a>
+
+            <a href="{{ url_for('trivia.global_leaderboard') }}"
+               class="action-button action-leaderboard">
+                <span>🌟</span>
+                <span>Global Champions</span>
+            </a>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const finalScore = {{ results.score }};
+        const totalQuestions = {{ results.total }};
+        const percentage = {{ format_percentage(results.score, results.total) }};
+
+        // Animated score counter
+        function animateScore() {
+            const scoreCounter = document.getElementById('scoreCounter');
+            const percentageCounter = document.getElementById('percentageCounter');
+
+            let currentScore = 0;
+            const increment = Math.max(1, Math.floor(finalScore / 20));
+
+            const timer = setInterval(() => {
+                currentScore += increment;
+                if (currentScore >= finalScore) {
+                    currentScore = finalScore;
+                    clearInterval(timer);
+
+                    // Trigger celebration for high scores
+                    if (percentage >= 90) {
+                        setTimeout(launchFireworks, 500);
+                    } else if (percentage >= 80) {
+                        setTimeout(createConfetti, 500);
+                    }
+                }
+
+                scoreCounter.textContent = `${currentScore}/${totalQuestions}`;
+
+                const currentPercentage = Math.round((currentScore / totalQuestions) * 100);
+                percentageCounter.textContent = `${currentPercentage}%`;
+
+                // Add sound effect placeholder
+                if (currentScore > 0) {
+                    playScoreSound();
+                }
+            }, 100);
+        }
+
+        // Fireworks for perfect/excellent scores
+        function launchFireworks() {
+            const container = document.getElementById('fireworksContainer');
+            const colors = ['#ffd700', '#ff006e', '#00ffff', '#ff9a00', '#10b981'];
+
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.left = Math.random() * 100 + '%';
+                    firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.animationDelay = Math.random() * 1 + 's';
+
+                    container.appendChild(firework);
+
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 2000);
+                }, i * 50);
+            }
+        }
+
+        // Confetti for good scores
+        function createConfetti() {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'];
+
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '8px';
+                confetti.style.height = '8px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 50}px) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 3000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Sound effects (placeholder)
+        function playScoreSound() {
+            // Could implement actual sound effects here
+            console.log('Score sound!');
+        }
+
+        function playVictorySound() {
+            // Could implement victory fanfare
+            console.log('Victory sound!');
+        }
+
+        // Start score animation after delay
+        setTimeout(animateScore, 1000);
+
+        // Question results entrance animations
+        const questionResults = document.querySelectorAll('.question-result');
+        questionResults.forEach((result, index) => {
+            setTimeout(() => {
+                result.style.opacity = '1';
+                result.style.transform = 'translateX(0) rotateY(0deg)';
+            }, 2000 + (index * 200));
+        });
+
+        // Performance badge effects
+        const performanceBadge = document.querySelector('.performance-badge-large');
+        if (performanceBadge) {
+            setTimeout(() => {
+                performanceBadge.style.transform = 'scale(1)';
+
+                // Add special effects based on performance
+                if (percentage === 100) {
+                    performanceBadge.style.animation = 'badgeUnlock 1s ease-out, victoryPulse 2s ease-in-out 2s infinite';
+                    setTimeout(playVictorySound, 1500);
+                }
+            }, 1500);
+        }
+
+        // Action button hover effects
+        const actionButtons = document.querySelectorAll('.action-button');
+        actionButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-3px) scale(1)';
+            });
+
+            button.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+
+        // Score circle interactive effects
+        const scoreCircle = document.querySelector('.score-circle');
+        if (scoreCircle) {
+            scoreCircle.addEventListener('click', function() {
+                // Re-trigger score animation
+                animateScore();
+
+                // Add pulse effect
+                this.style.animation = 'scoreReveal 0.6s ease-out, victoryPulse 1s ease-in-out';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 1600);
+            });
+        }
+
+        // Gaming atmosphere effects
+        function addResultsGlow() {
+            const resultsArena = document.querySelector('.results-arena');
+            if (resultsArena && percentage >= 70) {
+                const colors = ['#ffd700', '#10b981', '#3b82f6'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                resultsArena.style.boxShadow = `inset 0 0 100px ${randomColor}20`;
+
+                setTimeout(() => {
+                    resultsArena.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+
+        // Add glow effect every 8 seconds for good scores
+        if (percentage >= 70) {
+            setInterval(addResultsGlow, 8000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // R = Play Again
+            if (e.key === 'r' || e.key === 'R') {
+                const playAgainBtn = document.querySelector('.action-again');
+                if (playAgainBtn) {
+                    playAgainBtn.click();
+                }
+            }
+
+            // L = Leaderboard
+            if (e.key === 'l' || e.key === 'L') {
+                const leaderboardBtn = document.querySelector('.action-leaderboard');
+                if (leaderboardBtn) {
+                    leaderboardBtn.click();
+                }
+            }
+
+            // Escape = Back
+            if (e.key === 'Escape') {
+                const backBtn = document.querySelector('.action-back');
+                if (backBtn) {
+                    window.location.href = backBtn.href;
+                }
+            }
+        });
+
+        // Question result click effects
+        const questionResults = document.querySelectorAll('.question-result');
+        questionResults.forEach(result => {
+            result.addEventListener('click', function() {
+                // Highlight effect
+                const isCorrect = this.classList.contains('correct');
+                const flashColor = isCorrect ? '#10b981' : '#ef4444';
+
+                this.style.boxShadow = `0 0 30px ${flashColor}60`;
+                this.style.transform = 'scale(1.02)';
+
+                setTimeout(() => {
+                    this.style.boxShadow = '';
+                    this.style.transform = 'scale(1)';
+                }, 300);
+            });
+        });
+
+        // Auto-scroll to results after animations
+        setTimeout(() => {
+            const resultsDetails = document.querySelector('.results-details');
+            if (resultsDetails) {
+                resultsDetails.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }, 4000);
+
+        // Performance message based on score
+        setTimeout(() => {
+            let message = '';
+            if (percentage === 100) {
+                message = '🔥 FLAWLESS VICTORY! You are a true Movie Master!';
+            } else if (percentage >= 90) {
+                message = '⭐ EXCELLENT! Almost perfect performance!';
+            } else if (percentage >= 80) {
+                message = '👍 GREAT JOB! You really know your movies!';
+            } else if (percentage >= 70) {
+                message = '👌 GOOD WORK! Keep improving your movie knowledge!';
+            } else if (percentage >= 50) {
+                message = '😐 NOT BAD! Room for improvement, keep trying!';
+            } else {
+                message = '📚 KEEP LEARNING! Practice makes perfect!';
+            }
+
+            // Could show this message in a toast or modal
+            console.log('Performance message:', message);
+
+            // Add to page title for sharing
+            document.title = `${message} - ${document.title}`;
+        }, 3000);
+
+        // Share functionality (placeholder)
+        function shareResults() {
+            const text = `Just scored ${finalScore}/${totalQuestions} (${percentage}%) in MovieWeb Gaming trivia! 🎮🎬`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'MovieWeb Gaming Results',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback to clipboard
+                navigator.clipboard.writeText(text + ' ' + window.location.href);
+                console.log('Results copied to clipboard!');
+            }
+        }
+
+        // Double-click score circle to share
+        if (scoreCircle) {
+            scoreCircle.addEventListener('dblclick', shareResults);
+        }
+
+        // Add Easter egg for perfect scores
+        if (percentage === 100) {
+            // Konami code for extra celebration
+            let konamiCode = [];
+            const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+
+            document.addEventListener('keydown', function(e) {
+                konamiCode.push(e.keyCode);
+                if (konamiCode.length > konamiSequence.length) {
+                    konamiCode.shift();
+                }
+
+                if (konamiCode.join(',') === konamiSequence.join(',')) {
+                    // MEGA CELEBRATION!
+                    launchFireworks();
+                    setTimeout(launchFireworks, 1000);
+                    setTimeout(launchFireworks, 2000);
+                    console.log('🎊 MEGA CELEBRATION ACTIVATED! 🎊');
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

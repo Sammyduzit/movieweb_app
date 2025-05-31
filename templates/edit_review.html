@@ -1,80 +1,512 @@
-<!-- templates/edit_review.html -->
 {% extends "base.html" %}
 
-{% block title %}Edit Review - {{ movie.title }} - MovieWeb App{% endblock %}
+{% block title %}Upgrade Review - {{ movie.title }} - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+Enhance your movie review with the power of gaming-grade editing tools!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-forms.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.movie_detail', user_id=user.id, movie_id=movie.id) }}" class="neon-btn btn-sm">
+    🔙 Back to {{ movie.title | truncate_text(10) }}
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">
-            ← Back to {{ movie.title | truncate_text(30) }}
-        </a>
-    </div>
+<div class="form-arena">
+    <div class="form-container">
+        <!-- Form Header -->
+        <div class="form-header float-up opacity-0">
+            <h1 class="form-title">
+                ✏️ Upgrade Review
+            </h1>
+            <p class="form-subtitle">
+                Enhance Your Review for "{{ movie.title | truncate_text(30) }}"
+            </p>
 
-    <div class="edit-review-container">
-        <h1>Edit Review for "{{ movie.title | truncate_text(50) }}"</h1>
-
-        <!-- Current Review Preview -->
-        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #3498db;">
-            <h3 style="margin-bottom: 1rem; color: #2c3e50;">Current Review:</h3>
-            <div style="margin-bottom: 1rem;">
-                <strong>Content:</strong> {{ review.content | truncate_text(200) }}
-                {% if review.content | length > 200 %}
-                    <span style="color: #7f8c8d; font-style: italic;">(showing first 200 characters)</span>
-                {% endif %}
-            </div>
-            {% if review.reviewer_rating %}
-                <div style="margin-bottom: 1rem;">
-                    <strong>Rating:</strong> {{ review.reviewer_rating | format_rating }}
+            <!-- Movie Context Card -->
+            <div class="form-instructions">
+                <div class="form-instructions-title">🎬 Movie Context</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div style="text-align: center;">
+                        <div style="color: #3b82f6; font-weight: bold; font-size: 0.875rem;">TITLE</div>
+                        <div style="color: #e2e8f0; font-size: 0.875rem;">{{ movie.title | truncate_text(20) }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #10b981; font-weight: bold; font-size: 0.875rem;">DIRECTOR</div>
+                        <div style="color: #e2e8f0; font-size: 0.875rem;">{{ movie.director | truncate_text(15) or 'Unknown' }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #f59e0b; font-weight: bold; font-size: 0.875rem;">YEAR</div>
+                        <div style="color: #e2e8f0; font-size: 0.875rem;">{{ movie.year or 'Unknown' }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #8b5cf6; font-weight: bold; font-size: 0.875rem;">GENRE</div>
+                        <div style="color: #e2e8f0; font-size: 0.875rem;">{{ movie.genre | truncate_text(12) or 'Unknown' }}</div>
+                    </div>
                 </div>
-            {% endif %}
-            <div style="color: #7f8c8d; font-size: 0.9rem;">
-                <strong>Last updated:</strong> {{ review.updated_at | format_date('datetime') or review.created_at | format_date('datetime') }}
             </div>
         </div>
 
-        <form method="POST">
-            <div class="form-group">
-                <label for="content" class="form-label">Your Review:</label>
-                <textarea id="content" name="content" class="form-input" rows="4" required>{{ review.content }}</textarea>
-                <small style="color: #7f8c8d;">
-                    Character count: <span id="char-count">{{ review.content | length }}</span>/2000
-                </small>
-            </div>
+        <!-- Current Review Preview -->
+        <div class="current-review-preview" style="background: linear-gradient(145deg, #1e293b, #334155); border: 2px solid #475569; border-radius: 1.5rem; padding: 2rem; margin-bottom: 2rem; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; padding: 2px; background: linear-gradient(45deg, #8b5cf6, #3b82f6, #8b5cf6); border-radius: inherit; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: xor; -webkit-mask-composite: xor; opacity: 0.7; animation: gradientShift 4s ease infinite;"></div>
 
-            <div class="form-group">
-                <label for="reviewer_rating" class="form-label">Your Rating (1-10):</label>
-                <input type="number" id="reviewer_rating" name="reviewer_rating"
-                       class="form-input" min="1" max="10"
-                       value="{{ review.reviewer_rating or '' }}" placeholder="Optional">
-            </div>
+            <div style="position: relative; z-index: 1;">
+                <h3 style="color: #8b5cf6; font-family: 'Orbitron', monospace; margin-bottom: 1.5rem; text-transform: uppercase; font-size: 1.25rem;">
+                    📝 Current Review Data
+                </h3>
 
-            <div class="form-group" style="text-align: center;">
-                <button type="submit" class="btn btn-success">Update Review</button>
-                <a href="/users/{{ user.id }}/movies/{{ movie.id }}" class="btn btn-secondary">Cancel</a>
+                <div style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div style="color: #94a3b8; font-weight: bold; font-size: 0.875rem;">REVIEW CONTENT</div>
+                        <div style="color: #67e8f9; font-family: 'Orbitron', monospace; font-size: 0.75rem;">
+                            {{ review.content | length }} characters
+                        </div>
+                    </div>
+                    <div style="color: #e2e8f0; line-height: 1.6; font-size: 1rem; max-height: 150px; overflow-y: auto; border: 1px solid #475569; border-radius: 0.5rem; padding: 1rem; background: rgba(0, 0, 0, 0.2);">
+                        {{ review.content }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1rem; text-align: center;">
+                        <div style="color: #fbbf24; font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">CURRENT RATING</div>
+                        <div style="color: #fff; font-size: 1.5rem; font-weight: bold;">
+                            {% if review.reviewer_rating %}
+                                {{ review.reviewer_rating }}/10
+                                {% if review.reviewer_rating >= 9 %}🔥
+                                {% elif review.reviewer_rating >= 8 %}⭐
+                                {% elif review.reviewer_rating >= 7 %}👍
+                                {% elif review.reviewer_rating >= 6 %}👌
+                                {% elif review.reviewer_rating >= 5 %}😐
+                                {% elif review.reviewer_rating >= 3 %}👎
+                                {% else %}💀
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #6b7280;">No Rating</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.3); border-radius: 1rem; padding: 1rem; text-align: center;">
+                        <div style="color: #10b981; font-weight: bold; font-size: 0.875rem; margin-bottom: 0.5rem;">LAST UPDATED</div>
+                        <div style="color: #94a3b8; font-size: 0.875rem;">
+                            {{ review.updated_at | format_date('datetime') if review.updated_at else review.created_at | format_date('datetime') }}
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('reviews.edit_review', user_id=user.id, movie_id=movie.id, review_id=review.id) }}"
+                  id="editReviewForm" class="form-grid">
+
+                <!-- Review Content -->
+                <div class="form-field">
+                    <label for="content" class="field-label required">💬 Enhanced Review Content</label>
+                    <div style="position: relative;">
+                        <textarea id="content"
+                                  name="content"
+                                  class="field-input"
+                                  placeholder="Share your epic thoughts about this movie..."
+                                  required
+                                  maxlength="2000"
+                                  rows="6"
+                                  style="resize: vertical; min-height: 150px; font-family: inherit; line-height: 1.6;">{{ review.content }}</textarea>
+                        <div style="position: absolute; bottom: 1rem; right: 1rem; background: rgba(0, 0, 0, 0.7); color: #67e8f9; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: 'Orbitron', monospace; font-size: 0.75rem; pointer-events: none;">
+                            <span id="char-count">{{ review.content | length }}</span>/2000
+                        </div>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Express your movie experience with passion and detail</span>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button type="button" class="quick-phrase" data-phrase=" This movie was absolutely incredible!">⭐ Incredible</button>
+                            <button type="button" class="quick-phrase" data-phrase=" The cinematography was stunning.">🎥 Visuals</button>
+                            <button type="button" class="quick-phrase" data-phrase=" The plot kept me on the edge of my seat!">🎯 Thrilling</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rating -->
+                <div class="form-field">
+                    <label for="reviewer_rating" class="field-label">⭐ Your Ultimate Rating</label>
+                    <div class="field-with-icon rating-field">
+                        <input type="number"
+                               id="reviewer_rating"
+                               name="reviewer_rating"
+                               class="field-input"
+                               placeholder="Rate 1-10"
+                               value="{{ review.reviewer_rating or '' }}"
+                               min="1"
+                               max="10"
+                               step="1">
+                        <span class="rating-display" id="ratingDisplay">
+                            {% if review.reviewer_rating %}
+                                {% if review.reviewer_rating >= 9 %}🔥
+                                {% elif review.reviewer_rating >= 8 %}⭐
+                                {% elif review.reviewer_rating >= 7 %}👍
+                                {% elif review.reviewer_rating >= 6 %}👌
+                                {% elif review.reviewer_rating >= 5 %}😐
+                                {% elif review.reviewer_rating >= 3 %}👎
+                                {% else %}💀
+                                {% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Your personal score from 1 (disaster) to 10 (masterpiece)</span>
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.25rem; margin-top: 0.5rem; font-size: 0.75rem;">
+                            <div style="text-align: center; color: #ef4444;">1-2: 💀</div>
+                            <div style="text-align: center; color: #f59e0b;">3-4: 👎</div>
+                            <div style="text-align: center; color: #6b7280;">5-6: 😐</div>
+                            <div style="text-align: center; color: #10b981;">7-8: ⭐</div>
+                            <div style="text-align: center; color: #ffd700;">9-10: 🔥</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review Enhancement Tools -->
+                <div class="api-indicator">
+                    <div class="api-icon">🎮</div>
+                    <div class="api-text">
+                        Gaming-grade review editor with real-time character counting, quick phrase insertion,
+                        and instant emoji feedback. Your review will be updated with enhanced formatting!
+                    </div>
+                    <div class="api-status">Enhanced</div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        🚀 Upgrade Review
+                    </button>
+                    <a href="{{ url_for('movies.movie_detail', user_id=user.id, movie_id=movie.id) }}"
+                       class="cancel-button">
+                        <span>❌</span>
+                        <span>Cancel</span>
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
+<style>
+.quick-phrase {
+    background: linear-gradient(45deg, #374151, #4b5563);
+    border: 1px solid #6b7280;
+    color: #e5e7eb;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Orbitron', monospace;
+}
+
+.quick-phrase:hover {
+    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    border-color: #3b82f6;
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-// Character counter for textarea
-document.addEventListener('DOMContentLoaded', function() {
-    const textarea = document.getElementById('content');
-    const charCount = document.getElementById('char-count');
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editReviewForm');
+        const contentTextarea = document.getElementById('content');
+        const ratingInput = document.getElementById('reviewer_rating');
+        const charCount = document.getElementById('char-count');
+        const ratingDisplay = document.getElementById('ratingDisplay');
+        const submitButton = document.querySelector('.submit-button');
 
-    textarea.addEventListener('input', function() {
-        charCount.textContent = this.value.length;
+        // Store original values for change detection
+        const originalContent = contentTextarea.value;
+        const originalRating = ratingInput.value;
 
-        // Change color based on length
-        if (this.value.length > 1800) {
-            charCount.style.color = '#e74c3c';
-        } else if (this.value.length > 1500) {
-            charCount.style.color = '#f39c12';
-        } else {
-            charCount.style.color = '#7f8c8d';
+        // Character counter with enhanced styling
+        function updateCharCount() {
+            const length = contentTextarea.value.length;
+            charCount.textContent = length;
+
+            // Update color based on length
+            if (length > 1800) {
+                charCount.style.color = '#ef4444';
+                charCount.parentElement.style.borderColor = '#ef4444';
+            } else if (length > 1500) {
+                charCount.style.color = '#f59e0b';
+                charCount.parentElement.style.borderColor = '#f59e0b';
+            } else if (length > 1000) {
+                charCount.style.color = '#fbbf24';
+                charCount.parentElement.style.borderColor = '#fbbf24';
+            } else {
+                charCount.style.color = '#67e8f9';
+                charCount.parentElement.style.borderColor = '#67e8f9';
+            }
         }
+
+        contentTextarea.addEventListener('input', updateCharCount);
+
+        // Rating visual feedback with gaming elements
+        function updateRatingDisplay() {
+            const value = parseInt(ratingInput.value);
+
+            if (isNaN(value) || value < 1 || value > 10) {
+                ratingDisplay.textContent = '';
+                ratingDisplay.className = 'rating-display';
+                return;
+            }
+
+            let emoji = '';
+            let className = 'rating-display';
+
+            if (value >= 9) {
+                emoji = '🔥';
+                className += ' rating-10';
+                // Add special effects for high ratings
+                ratingInput.style.borderColor = '#ffd700';
+                ratingInput.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.5)';
+            } else if (value >= 8) {
+                emoji = '⭐';
+                className += ' rating-8';
+                ratingInput.style.borderColor = '#10b981';
+                ratingInput.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
+            } else if (value >= 7) {
+                emoji = '👍';
+                className += ' rating-7';
+                ratingInput.style.borderColor = '#3b82f6';
+                ratingInput.style.boxShadow = '';
+            } else if (value >= 6) {
+                emoji = '👌';
+                className += ' rating-6';
+                ratingInput.style.borderColor = '#8b5cf6';
+                ratingInput.style.boxShadow = '';
+            } else if (value >= 5) {
+                emoji = '😐';
+                className += ' rating-5';
+                ratingInput.style.borderColor = '#6b7280';
+                ratingInput.style.boxShadow = '';
+            } else if (value >= 3) {
+                emoji = '👎';
+                className += ' rating-3';
+                ratingInput.style.borderColor = '#f59e0b';
+                ratingInput.style.boxShadow = '';
+            } else {
+                emoji = '💀';
+                className += ' rating-1';
+                ratingInput.style.borderColor = '#ef4444';
+                ratingInput.style.boxShadow = '';
+            }
+
+            ratingDisplay.textContent = emoji;
+            ratingDisplay.className = className;
+        }
+
+        ratingInput.addEventListener('input', updateRatingDisplay);
+
+        // Quick phrase buttons
+        const quickPhrases = document.querySelectorAll('.quick-phrase');
+        quickPhrases.forEach(button => {
+            button.addEventListener('click', function() {
+                const phrase = this.dataset.phrase;
+                const cursorPos = contentTextarea.selectionStart;
+                const textBefore = contentTextarea.value.substring(0, cursorPos);
+                const textAfter = contentTextarea.value.substring(cursorPos);
+
+                contentTextarea.value = textBefore + phrase + textAfter;
+                contentTextarea.focus();
+                contentTextarea.setSelectionRange(cursorPos + phrase.length, cursorPos + phrase.length);
+
+                updateCharCount();
+
+                // Visual feedback
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 100);
+                }, 100);
+            });
+        });
+
+        // Change detection
+        function hasChanges() {
+            return contentTextarea.value !== originalContent ||
+                   ratingInput.value !== originalRating;
+        }
+
+        function updateSubmitButton() {
+            if (hasChanges()) {
+                submitButton.style.background = 'linear-gradient(45deg, #10b981, #059669, #10b981)';
+                submitButton.textContent = '🚀 Save Upgrades';
+                submitButton.disabled = false;
+            } else {
+                submitButton.style.background = 'linear-gradient(45deg, #6b7280, #4b5563)';
+                submitButton.textContent = '🔄 No Changes';
+                submitButton.disabled = true;
+            }
+        }
+
+        [contentTextarea, ratingInput].forEach(input => {
+            input.addEventListener('input', updateSubmitButton);
+        });
+
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            if (!contentTextarea.value.trim()) {
+                e.preventDefault();
+                alert('🎮 Your review content cannot be empty!');
+                contentTextarea.focus();
+                return false;
+            }
+
+            if (contentTextarea.value.length < 10) {
+                e.preventDefault();
+                alert('🎯 Your review needs at least 10 characters to be epic!');
+                contentTextarea.focus();
+                return false;
+            }
+
+            if (!hasChanges()) {
+                e.preventDefault();
+                alert('🎪 No changes detected! Modify your review to upgrade it.');
+                return false;
+            }
+
+            // Add loading state
+            submitButton.textContent = '🚀 Upgrading Review...';
+            submitButton.disabled = true;
+            form.classList.add('form-loading');
+        });
+
+        // Gaming effects
+        contentTextarea.addEventListener('focus', function() {
+            this.style.transform = 'scale(1.01)';
+            this.style.borderColor = '#3b82f6';
+        });
+
+        contentTextarea.addEventListener('blur', function() {
+            this.style.transform = 'scale(1)';
+        });
+
+        // Auto-resize textarea
+        function autoResize() {
+            contentTextarea.style.height = 'auto';
+            contentTextarea.style.height = Math.max(150, contentTextarea.scrollHeight) + 'px';
+        }
+
+        contentTextarea.addEventListener('input', autoResize);
+        autoResize(); // Initial resize
+
+        // Confetti for perfect ratings
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff006e', '#00ffff', '#ff9a00'];
+            for (let i = 0; i < 25; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '8px';
+                confetti.style.height = '8px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 50}px) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 3000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Trigger confetti for perfect ratings
+        ratingInput.addEventListener('change', function() {
+            if (parseInt(this.value) === 10) {
+                setTimeout(createConfetti, 200);
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + S = Save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (hasChanges() && !submitButton.disabled) {
+                    submitButton.click();
+                }
+            }
+
+            // Escape = Cancel
+            if (e.key === 'Escape' && !e.ctrlKey && !e.metaKey) {
+                const cancelButton = document.querySelector('.cancel-button');
+                if (cancelButton) {
+                    if (hasChanges()) {
+                        if (confirm('🚪 You have unsaved changes. Are you sure you want to cancel?')) {
+                            window.location.href = cancelButton.href;
+                        }
+                    } else {
+                        window.location.href = cancelButton.href;
+                    }
+                }
+            }
+        });
+
+        // Initialize states
+        updateCharCount();
+        updateRatingDisplay();
+        updateSubmitButton();
+
+        // Success animation on submit
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                document.body.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+                setTimeout(() => {
+                    document.body.style.background = '';
+                }, 1000);
+            }, 100);
+        });
+
+        // Auto-save to localStorage
+        function saveFormData() {
+            const formData = {
+                content: contentTextarea.value,
+                rating: ratingInput.value,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(`editReview_${window.location.pathname}`, JSON.stringify(formData));
+        }
+
+        [contentTextarea, ratingInput].forEach(input => {
+            input.addEventListener('input', saveFormData);
+        });
+
+        // Word count and reading time estimation
+        function updateWordStats() {
+            const text = contentTextarea.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const readingTime = Math.ceil(words / 200); // Average reading speed
+
+            // Could display this info somewhere
+            console.log(`Words: ${words}, Reading time: ${readingTime} min`);
+        }
+
+        contentTextarea.addEventListener('input', updateWordStats);
+        updateWordStats();
     });
-});
 </script>
 {% endblock %}

@@ -1,113 +1,421 @@
-<!-- templates/movie_detail.html -->
 {% extends "base.html" %}
 
-{% block title %}{{ movie.title }} - MovieWeb App{% endblock %}
+{% block title %}{{ movie.title }} ({{ movie.year or 'Unknown' }}) - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+Explore {{ movie.title }} in our gaming arena - read reviews, play trivia, and see who's the ultimate fan!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-movie-detail.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="neon-btn btn-sm">
+    🔙 {{ user.name | truncate_text(10) }}'S ARENA
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <a href="/users/{{ user.id }}" class="btn btn-secondary">← Back to {{ user.name }}'s Movies</a>
-    </div>
-
-    <!-- Movie Details Section -->
+<div class="movie-detail-arena">
     <div class="movie-detail-container">
-        <div class="movie-detail-header">
-            <div class="movie-poster-large">
-                {% set poster = get_poster_url(movie.poster) %}
-                {% if poster %}
-                    <img src="{{ poster }}" alt="{{ movie.title }} poster" class="poster-image-large">
-                {% else %}
-                    <div class="no-poster-large">No Poster</div>
-                {% endif %}
-            </div>
+        <!-- Movie Spotlight Header -->
+        <div class="movie-spotlight">
+            <div class="movie-header">
+                <!-- Movie Poster Section -->
+                <div class="movie-poster-section">
+                    <div class="movie-poster-large">
+                        {% set poster = get_poster_url(movie.poster) %}
+                        {% if poster %}
+                            <img src="{{ poster }}" alt="{{ movie.title }} poster" class="poster-image-large">
+                        {% else %}
+                            <div class="no-poster-large">
+                                <span>NO POSTER<br>AVAILABLE</span>
+                            </div>
+                        {% endif %}
 
-            <div class="movie-info-large">
-                <h1 class="movie-title">{{ movie.title }} ({{ movie.year or 'Unknown' }})</h1>
-                <div class="movie-details">
-                    <p><strong>Director:</strong> {{ movie.director or 'Unknown' }}</p>
-                    {% if movie.genre %}<p><strong>Genre:</strong> {{ movie.genre }}</p>{% endif %}
-                    {% if movie.rating %}<p><strong>Rating:</strong> {{ movie.rating | format_rating }}</p>{% endif %}
+                        <!-- Rating Overlay -->
+                        {% if movie.rating %}
+                        <div class="rating-overlay">
+                            {{ movie.rating | format_rating | replace('/10', '') }}
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
 
-                <div class="movie-actions">
-                    <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}"
-                       class="btn btn-primary">🧠 Movie Trivia (7 Questions)</a>
-                    <a href="{{ url_for('trivia.movie_leaderboard', user_id=user.id, movie_id=movie.id) }}"
-                       class="btn btn-secondary">🏆 Movie Leaderboard</a>
-                    <a href="/users/{{ user.id }}/update_movie/{{ movie.id }}" class="btn btn-warning">Edit Movie</a>
-                    <a href="/users/{{ user.id }}/delete_movie/{{ movie.id }}"
-                       class="btn btn-danger"
-                       onclick="return confirm('Are you sure you want to delete this movie?')">Delete Movie</a>
+                <!-- Movie Info Section -->
+                <div class="movie-info-section">
+                    <h1 class="movie-title-main">
+                        {{ movie.title }}
+                        {% if movie.year %}({{ movie.year }}){% endif %}
+                    </h1>
+
+                    <!-- Meta Information -->
+                    <div class="movie-meta-info">
+                        {% if movie.director %}
+                        <div class="meta-item">
+                            <span class="meta-icon">🎬</span>
+                            <div>
+                                <div class="meta-label">Director</div>
+                                <div class="meta-value">{{ movie.director }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if movie.genre %}
+                        <div class="meta-item">
+                            <span class="meta-icon">🎭</span>
+                            <div>
+                                <div class="meta-label">Genre</div>
+                                <div class="meta-value">{{ movie.genre }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if movie.rating %}
+                        <div class="meta-item">
+                            <span class="meta-icon">⭐</span>
+                            <div>
+                                <div class="meta-label">Rating</div>
+                                <div class="meta-value">{{ movie.rating | format_rating }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="meta-item">
+                            <span class="meta-icon">💬</span>
+                            <div>
+                                <div class="meta-label">Reviews</div>
+                                <div class="meta-value">{{ reviews | length }} {{ pluralize(reviews | length, 'Review') }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Movie Description (if available from API) -->
+                    {% if movie.plot %}
+                    <div class="movie-description">
+                        {{ movie.plot | truncate_text(300) }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="movie-actions-grid">
+                        <a href="{{ url_for('trivia.movie_trivia', user_id=user.id, movie_id=movie.id) }}"
+                           class="action-button action-trivia">
+                            <span>🧠</span>
+                            <span>Movie Battle</span>
+                        </a>
+
+                        <a href="{{ url_for('trivia.movie_leaderboard', user_id=user.id, movie_id=movie.id) }}"
+                           class="action-button action-leaderboard">
+                            <span>🏆</span>
+                            <span>Leaderboard</span>
+                        </a>
+
+                        <a href="{{ url_for('movies.update_movie', user_id=user.id, movie_id=movie.id) }}"
+                           class="action-button action-edit">
+                            <span>⚙️</span>
+                            <span>Edit Movie</span>
+                        </a>
+
+                        <a href="{{ url_for('movies.delete_movie', user_id=user.id, movie_id=movie.id) }}"
+                           class="action-button action-delete"
+                           onclick="return confirm('⚠️ Are you sure you want to delete this movie? This action cannot be undone!')">
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Reviews Section -->
-    <div class="reviews-section">
-        <h2>Reviews ({{ reviews | length }} {{ pluralize(reviews | length, 'review') }})</h2>
+        <!-- Reviews Arena -->
+        <div class="reviews-arena">
+            <h2 class="reviews-title">
+                💬 Battle Reviews ({{ reviews | length }})
+            </h2>
 
-        <!-- Add Review Form -->
-        <div class="add-review-form">
-            <h3>Write a Review</h3>
-            <form method="POST" action="/users/{{ user.id }}/movies/{{ movie.id }}/add_review">
-                <div class="form-group">
-                    <label for="content" class="form-label">Your Review:</label>
-                    <textarea id="content" name="content" class="form-input" rows="4" required
-                              placeholder="Write your review here..."></textarea>
-                </div>
+            <!-- Add Review Section -->
+            <div class="add-review-section">
+                <h3 class="add-review-title">🎮 Write Your Review</h3>
 
-                <div class="form-group">
-                    <label for="reviewer_rating" class="form-label">Your Rating (1-10):</label>
-                    <input type="number" id="reviewer_rating" name="reviewer_rating"
-                           class="form-input" min="1" max="10" placeholder="Optional">
-                </div>
+                <form method="POST" action="{{ url_for('reviews.add_review', user_id=user.id, movie_id=movie.id) }}" class="review-form">
+                    <div class="form-group">
+                        <label for="content" class="form-label">Your Epic Review:</label>
+                        <textarea id="content" name="content" class="form-textarea"
+                                  placeholder="Share your thoughts about this movie..."
+                                  required maxlength="2000"></textarea>
+                        <small style="color: #94a3b8;">
+                            <span id="char-count">0</span>/2000 characters
+                        </small>
+                    </div>
 
-                <div class="form-group">
-                    <button type="submit" class="btn btn-success">Submit Review</button>
-                </div>
-            </form>
-        </div>
+                    <div class="form-group">
+                        <label for="reviewer_rating" class="form-label">Your Rating (1-10):</label>
+                        <input type="number" id="reviewer_rating" name="reviewer_rating"
+                               class="form-input" min="1" max="10" step="1"
+                               placeholder="Rate this movie">
+                    </div>
 
-        <!-- Display Reviews -->
-        {% if reviews %}
-            <div class="reviews-list">
-                {% for review in reviews %}
-                    <div class="review-item">
+                    <div class="form-actions">
+                        <button type="submit" class="trivia-btn btn-lg">
+                            🚀 Submit Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Reviews List -->
+            {% if reviews %}
+                <div class="reviews-list">
+                    {% for review in reviews %}
+                    <div class="review-card">
                         <div class="review-header">
                             {% if review.reviewer_rating %}
-                                <span class="review-rating">{{ review.reviewer_rating | format_rating }}</span>
+                                <div class="review-rating">
+                                    ⭐ {{ review.reviewer_rating }}/10
+                                </div>
                             {% endif %}
-                            <span class="review-date">{{ review.created_at | format_date('short') }}</span>
+                            <div class="review-date">
+                                {{ review.created_at | format_date('short') }}
+                                {% if review.updated_at and review.updated_at != review.created_at %}
+                                    (Edited)
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="review-content">
-                            {{ review.content | truncate_text(500) }}
+                            {{ review.content }}
                         </div>
-                        
+
                         <div class="review-actions">
-                            <a href="/users/{{ user.id }}/movies/{{ movie.id }}/like_review/{{ review.id }}"
-                               class="btn btn-primary btn-small">
-                                👍 Like ({{ review.likes }})
+                            <a href="{{ url_for('reviews.like_review', user_id=user.id, movie_id=movie.id, review_id=review.id) }}"
+                               class="review-action review-like">
+                                <span>👍</span>
+                                <span>Like ({{ review.likes }})</span>
                             </a>
-                            <a href="/users/{{ user.id }}/movies/{{ movie.id }}/edit_review/{{ review.id }}"
-                               class="btn btn-warning btn-small">
-                                ✏️ Edit
+
+                            <a href="{{ url_for('reviews.edit_review', user_id=user.id, movie_id=movie.id, review_id=review.id) }}"
+                               class="review-action review-edit">
+                                <span>✏️</span>
+                                <span>Edit</span>
                             </a>
-                            <a href="/users/{{ user.id }}/movies/{{ movie.id }}/delete_review/{{ review.id }}"
-                               class="btn btn-danger btn-small"
-                               onclick="return confirm('Are you sure you want to delete this review?')">
-                                🗑️ Delete
+
+                            <a href="{{ url_for('reviews.delete_review_route', user_id=user.id, movie_id=movie.id, review_id=review.id) }}"
+                               class="review-action review-delete"
+                               onclick="return confirm('🗑️ Are you sure you want to delete this review?')">
+                                <span>🗑️</span>
+                                <span>Delete</span>
                             </a>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="no-reviews">
-                <p>No reviews yet. Be the first to write one!</p>
-            </div>
-        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-reviews">
+                    <div class="no-reviews-icon">💭</div>
+                    <p>No reviews yet for this movie.</p>
+                    <p>Be the first to share your thoughts!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Back Navigation -->
+        <div class="section" style="text-align: center; margin-top: 3rem;">
+            <a href="{{ url_for('movies.user_movies', user_id=user.id) }}"
+               class="action-button action-back" style="display: inline-flex;">
+                <span>🔙</span>
+                <span>Back to {{ user.name | truncate_text(15) }}'s Arena</span>
+            </a>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Character counter for review textarea
+        const textarea = document.getElementById('content');
+        const charCount = document.getElementById('char-count');
+
+        if (textarea && charCount) {
+            textarea.addEventListener('input', function() {
+                const count = this.value.length;
+                charCount.textContent = count;
+
+                // Change color based on character count
+                if (count > 1800) {
+                    charCount.style.color = '#ef4444';
+                } else if (count > 1500) {
+                    charCount.style.color = '#f59e0b';
+                } else if (count > 1000) {
+                    charCount.style.color = '#fbbf24';
+                } else {
+                    charCount.style.color = '#94a3b8';
+                }
+            });
+        }
+
+        // Movie poster hover effects
+        const posterLarge = document.querySelector('.movie-poster-large');
+        if (posterLarge) {
+            posterLarge.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05) rotateY(5deg)';
+            });
+
+            posterLarge.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotateY(0deg)';
+            });
+        }
+
+        // Rating overlay pulse effect
+        const ratingOverlay = document.querySelector('.rating-overlay');
+        if (ratingOverlay) {
+            setInterval(() => {
+                ratingOverlay.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    ratingOverlay.style.transform = 'scale(1)';
+                }, 200);
+            }, 5000);
+        }
+
+        // Action button sound effects (placeholder)
+        const actionButtons = document.querySelectorAll('.action-button');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Add click animation
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+
+        // Review card entrance animations
+        const reviewCards = document.querySelectorAll('.review-card');
+        reviewCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+            }, 200 + (index * 150));
+        });
+
+        // Review action hover effects
+        const reviewActions = document.querySelectorAll('.review-action');
+        reviewActions.forEach(action => {
+            action.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05) translateY(-2px)';
+            });
+
+            action.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) translateY(0)';
+            });
+        });
+
+        // Gaming atmosphere effects
+        function addMovieGlow() {
+            const movieSpotlight = document.querySelector('.movie-spotlight');
+            if (movieSpotlight) {
+                const colors = ['#ffd700', '#ff006e', '#00ffff'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                movieSpotlight.style.boxShadow = `0 0 50px ${randomColor}40`;
+
+                setTimeout(() => {
+                    movieSpotlight.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+
+        // Add glow effect every 10 seconds
+        setInterval(addMovieGlow, 10000);
+
+        // Form validation enhancements
+        const reviewForm = document.querySelector('.review-form');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', function(e) {
+                const content = document.getElementById('content').value.trim();
+                if (content.length < 10) {
+                    e.preventDefault();
+                    alert('🎮 Your review needs at least 10 characters to be epic!');
+                    return false;
+                }
+
+                // Add submission animation
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.style.transform = 'scale(0.95)';
+                    submitBtn.textContent = '🚀 Submitting...';
+                }
+            });
+        }
+
+        // Rating input enhancements
+        const ratingInput = document.getElementById('reviewer_rating');
+        if (ratingInput) {
+            ratingInput.addEventListener('input', function() {
+                const value = parseInt(this.value);
+                let emoji = '';
+
+                if (value >= 9) emoji = '🔥';
+                else if (value >= 8) emoji = '⭐';
+                else if (value >= 7) emoji = '👍';
+                else if (value >= 6) emoji = '👌';
+                else if (value >= 5) emoji = '😐';
+                else if (value >= 3) emoji = '👎';
+                else if (value >= 1) emoji = '💀';
+
+                // Visual feedback
+                this.style.borderColor = value >= 7 ? '#10b981' : value >= 5 ? '#f59e0b' : '#ef4444';
+
+                // Could show emoji feedback
+                console.log(`Rating: ${value} ${emoji}`);
+            });
+        }
+
+        // Konfetti for high ratings
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff006e', '#00ffff', '#ff9a00'];
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = '8px';
+                confetti.style.height = '8px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 50}px) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: 3000 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Trigger confetti for perfect ratings
+        if (ratingInput) {
+            ratingInput.addEventListener('change', function() {
+                if (parseInt(this.value) === 10) {
+                    setTimeout(createConfetti, 200);
+                }
+            });
+        }
+
+        // Smooth scroll to reviews when review is submitted
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('review_added')) {
+            setTimeout(() => {
+                document.querySelector('.reviews-arena').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+    });
+</script>
 {% endblock %}
