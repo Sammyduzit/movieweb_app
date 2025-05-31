@@ -321,6 +321,29 @@ body {
     font-size: 1.125rem;
 }
 
+.nav-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+.nav-brand-link:hover {
+    transform: scale(1.05);
+    text-decoration: none;
+}
+
+.nav-brand-link:hover .nav-logo {
+    background: linear-gradient(135deg, #ff00ff, #00ffff, #ffff00);
+    animation: gradientShift 1s ease infinite;
+}
+
+.nav-brand-link:hover .nav-title {
+    text-shadow: 0 0 20px rgba(236, 72, 153, 0.8);
+}
+
 .nav-title {
     font-size: 1.5rem;
     font-weight: bold;
