@@ -2,7 +2,7 @@ from config import DatabaseConfig, AppConfig
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from flask import Flask, redirect, url_for, render_template, request
 from datamanager import init_database, User, Movie, SQLiteDataManager
-from routes import user_bp, movie_bp, review_bp, api_bp, trivia_bp
+from routes import user_bp, movie_bp, review_bp, api_bp, trivia_bp, homepage_bp
 from utils.template_helpers import register_template_helpers
 import os
 
@@ -29,11 +29,12 @@ def create_app():
     app.register_blueprint(review_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(trivia_bp)
+    app.register_blueprint(homepage_bp)
 
     @app.route('/')
     def index():
-        """Redirect to users page"""
-        return redirect(url_for('users.list_users'))
+        """Redirect to homepage"""
+        return redirect(url_for('homepage.homepage'))
 
     @app.errorhandler(400)
     def bad_request(error):
