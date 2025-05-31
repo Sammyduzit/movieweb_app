@@ -1,6 +1,6 @@
 from config import TriviaConfig
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from services.trivia_service import TriviaService
+from services.mock_trivia_service import MockTriviaService
 from exceptions import (
     TriviaError, UserNotFoundError, MovieNotFoundError,
     InsufficientMoviesError, ExternalAPIError
@@ -8,7 +8,7 @@ from exceptions import (
 from utils.decorators import require_user, require_user_and_movie
 
 trivia_bp = Blueprint('trivia', __name__)
-trivia_service = TriviaService()
+trivia_service = MockTriviaService()
 
 def get_api_status():
     """Get current API status for templates"""
@@ -168,6 +168,7 @@ def trivia_answer():
         user_answer = int(request.form.get('answer', -1))
 
         updated_session = trivia_service.process_trivia_answer(trivia_session, user_answer)
+
         session['trivia_session'] = updated_session
 
         return redirect(url_for('trivia.trivia_question'))
@@ -191,7 +192,6 @@ def trivia_results():
 
     try:
         results = trivia_service.calculate_trivia_results(trivia_session)
-
         trivia_service.save_trivia_score(trivia_session)
 
         session.pop('trivia_session', None)

@@ -153,6 +153,13 @@ class TriviaService:
         correct_answer = question.get('correct', 0)
         is_correct = user_answer == correct_answer
 
+        print(f"🔍 DEBUG: Answer checking:")
+        print(f"  Question: {question.get('question', 'N/A')[:50]}...")
+        print(f"  User answer: {user_answer}")
+        print(f"  Correct answer: {correct_answer}")
+        print(f"  Is correct: {is_correct}")
+        print(f"  Current score: {trivia_session.get('score', 0)}")
+
         trivia_session['answers'].append({
             'question': question['question'],
             'user_answer': user_answer,
