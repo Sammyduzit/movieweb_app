@@ -116,19 +116,6 @@ def pluralize(count, singular, plural=None):
 def register_template_helpers(app):
     """Register all template helpers with Flask app"""
 
-    # Register as template filters
-    app.jinja_env.filters['format_percentage'] = format_percentage
-    app.jinja_env.filters['performance_badge'] = get_performance_badge
-    app.jinja_env.filters['rank_display'] = get_rank_display
-    app.jinja_env.filters['trivia_type'] = format_trivia_type
-    app.jinja_env.filters['format_date'] = format_date
-    app.jinja_env.filters['truncate_text'] = truncate_text
-    app.jinja_env.filters['difficulty_style'] = get_difficulty_style
-    app.jinja_env.filters['format_rating'] = format_rating
-    app.jinja_env.filters['poster_url'] = get_poster_url
-    app.jinja_env.filters['pluralize'] = pluralize
-
-    # Register as global template functions
     app.jinja_env.globals.update(
         format_percentage=format_percentage,
         get_performance_badge=get_performance_badge,
@@ -141,3 +128,8 @@ def register_template_helpers(app):
         get_poster_url=get_poster_url,
         pluralize=pluralize
     )
+
+    app.jinja_env.filters['truncate_text'] = truncate_text
+    app.jinja_env.filters['format_date'] = format_date
+    app.jinja_env.filters['format_rating'] = format_rating
+    app.jinja_env.filters['pluralize'] = pluralize
