@@ -153,7 +153,8 @@ body {
     font-weight: bold;
     color: #fff;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    text-align: center;
     cursor: pointer;
     position: relative;
 }
@@ -163,6 +164,20 @@ body {
     transform: translateY(-3px);
     text-decoration: none;
     color: #fff;
+}
+/* FIX for Leaderboard button*/
+.neon-btn.btn-lg {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.neon-btn.btn-lg * {
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 
