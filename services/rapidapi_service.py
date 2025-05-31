@@ -12,7 +12,11 @@ class RapidAPIService:
 
     def __init__(self):
         self.api_key = os.getenv('RAPIDAPI_KEY')
-        self.base_url = "https://chatgpt-ai-chat-bot.p.rapidapi.com/ask"  # Example endpoint
+        self.base_url = "https://chatgpt-ai-chat-bot.p.rapidapi.com/ask"
+
+        from .api_usage_tracker import APIUsageTracker
+        self.usage_tracker = APIUsageTracker(limit=95)
+
 
     def generate_movie_trivia(self, movie_data):
         """Generate 7 trivia questions for a specific movie"""
@@ -41,10 +45,12 @@ class RapidAPIService:
 
         return self._make_api_call(query)
 
+
     def generate_collection_trivia(self, movies_data):
         """Generate 21 trivia questions across user's movie collection"""
         movie_list = []
-        for i, movie in enumerate(movies_data[:15]):  # Limit to 15 movies
+        #Limit movies to 10
+        for i, movie in enumerate(movies_data[:10]):
             movie_list.append(f"{movie['title']} ({movie.get('year', 'Unknown')}) directed by {movie.get('director', 'Unknown')}")
 
         movies_text = ", ".join(movie_list)
@@ -72,10 +78,15 @@ class RapidAPIService:
 
         return self._make_api_call(query)
 
+
     def _make_api_call(self, query):
         """Make API call to RapidAPI ChatGPT"""
         if not self.api_key:
             print("⚠️ No RapidAPI key found")
+            return None
+
+        if not self.usage_tracker.can_make_call():
+            print("🚫 Monthly API limit reached - blocking API call")
             return None
 
         payload = {"query": query}
@@ -88,39 +99,44 @@ class RapidAPIService:
         try:
             print("🤖 Generating trivia questions...")
             response = requests.post(self.base_url, json=payload, headers=headers, timeout=APIConfig.RAPIDAPI_TIMEOUT)
-            response.raise_for_status()
 
-            data = response.json()
-            print(f"✅ API Response received: {len(str(data))} characters")
+            self.usage_tracker.record_call()
 
-            ai_response = data.get('response', '')
-            if not ai_response:
-                print("🔴 No response text in API response")
-                return None
+            print(f"📡 API Response Status: {response.status_code}")
 
-            json_match = re.search(r'\{.*"questions".*\}', ai_response, re.DOTALL)
-            if json_match:
-                json_str = json_match.group()
-                try:
-                    parsed_json = json.loads(json_str)
-                    questions = parsed_json.get('questions', [])
-                    print(f"✅ Generated {len(questions)} trivia questions")
-                    return parsed_json
-                except json.JSONDecodeError as e:
-                    print(f"🔴 JSON parsing error: {e}")
-                    print(f"Raw JSON: {json_str[:200]}...")
+            if response.status_code == 200:
+                response_text = response.text.strip()
+
+                if "I'm sorry, right now I'm not able to answer that question" in response_text:
+                    print("🔴 ChatGPT service temporarily unavailable")
                     return None
-            else:
-                print("🔴 No JSON structure found in response")
-                print(f"Raw response: {ai_response[:200]}...")
-                return None
+
+                try:
+                    data = response.json()
+                    ai_response = data.get('response', data.get('message', ''))
+                except json.JSONDecodeError:
+                    ai_response = response_text
+
+                json_match = re.search(r'\{.*"questions".*\}', ai_response, re.DOTALL)
+                if json_match:
+                    try:
+                        parsed_json = json.loads(json_match.group())
+                        questions = parsed_json.get('questions', [])
+
+                        if questions and len(questions) > 0:
+                            print(f"✅ Generated {len(questions)} AI trivia questions")
+                            return parsed_json
+                    except json.JSONDecodeError as e:
+                        print(f"🔴 JSON parsing error: {e}")
 
         except requests.RequestException as e:
-            print(f"🔴 RapidAPI request error: {e}")
-            return None
+            self.usage_tracker.record_call()
+            print(f"🔴 Request error: {e}")
         except Exception as e:
             print(f"🔴 Unexpected error: {e}")
-            return None
+
+        return None
+
 
     def test_connection(self):
         """Test if RapidAPI connection works"""
