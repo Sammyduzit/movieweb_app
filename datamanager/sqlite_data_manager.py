@@ -64,7 +64,7 @@ class SQLiteDataManager(DataManagerInterface):
             title=movie_data.get('title'),
             director=movie_data.get('director'),
             year=movie_data.get('year'),
-            rating=movie_data.get('imdb_rating') or movie_data.get('rating'),
+            rating=movie_data.get('rating') or movie_data.get('imdb_rating'),
             genre=movie_data.get('genre'),
             poster=movie_data.get('poster'),
             user_id=user_id
@@ -97,7 +97,7 @@ class SQLiteDataManager(DataManagerInterface):
             title=movie_data.get('title'),
             director=movie_data.get('director'),
             year=movie_data.get('year'),
-            rating=movie_data.get('imdb_rating') or movie_data.get('rating'),
+            rating=movie_data.get('rating') or movie_data.get('imdb_rating'),
             genre=movie_data.get('genre'),
             poster=movie_data.get('poster'),
             user_id=user_id
