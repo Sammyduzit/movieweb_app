@@ -8,16 +8,40 @@ from exceptions import (
 from utils.decorators import require_user, require_user_and_movie
 
 trivia_bp = Blueprint('trivia', __name__)
-
 trivia_service = TriviaService()
 
-
+def get_api_status():
+    """Get current API status for templates"""
+    try:
+        from services.rapidapi_service import RapidAPIService
+        rapidapi_service = RapidAPIService()
+        stats = rapidapi_service.usage_tracker.get_usage_stats()
+        return {
+            'api_available': stats['remaining'] > 0,
+            'calls_made': stats['calls_made'],
+            'limit': stats['limit'],
+            'remaining': stats['remaining']
+        }
+    except:
+        return {'api_available': True, 'calls_made': 0, 'limit': 95, 'remaining': 95}
 # ==================== MOVIE TRIVIA ====================
 
 @trivia_bp.route('/users/<int:user_id>/movies/<int:movie_id>/trivia')
 @require_user_and_movie
 def movie_trivia(user_id, movie_id, user, movie):
     """Start trivia for a specific movie (7 questions)"""
+    api_status = get_api_status()
+
+    # CHECK API LIMIT
+    if not api_status['api_available']:
+        flash(
+            f'Monthly API limit reached ({api_status["calls_made"]}/{api_status["limit"]}). Trivia resets next month.',
+            'error')
+        return redirect(url_for('movies.movie_detail', user_id=user_id, movie_id=movie_id))
+
+    if api_status['remaining'] <= 5:
+        flash(f'Warning: Only {api_status["remaining"]} API calls remaining this month!', 'warning')
+
     try:
         trivia_data = trivia_service.generate_movie_trivia(user_id, movie_id)
 
@@ -54,6 +78,18 @@ def movie_trivia(user_id, movie_id, user, movie):
 @require_user
 def collection_trivia(user_id, user):
     """Start trivia for user's entire collection (21 questions)"""
+    api_status = get_api_status()
+
+    # CHECK API LIMIT
+    if not api_status['api_available']:
+        flash(
+            f'Monthly API limit reached ({api_status["calls_made"]}/{api_status["limit"]}). Trivia resets next month.',
+            'error')
+        return redirect(url_for('movies.user_movies', user_id=user_id))
+
+    if api_status['remaining'] <= 5:
+        flash(f'Warning: Only {api_status["remaining"]} API calls remaining this month!', 'warning')
+
     try:
         trivia_data = trivia_service.generate_collection_trivia(user_id)
 

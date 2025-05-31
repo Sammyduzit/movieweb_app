@@ -238,6 +238,34 @@ def api_like_review(review_id):
     return success_response(result, 'Review liked successfully')
 
 
+@api_bp.route('/usage', methods=['GET'])
+def api_usage_stats():
+    """GET /api/usage - Get API usage statistics"""
+    try:
+        from services.rapidapi_service import RapidAPIService
+        rapidapi_service = RapidAPIService()
+        stats = rapidapi_service.usage_tracker.get_usage_stats()
+
+        return success_response({
+            'api_usage': stats,
+            'status': 'available' if stats['remaining'] > 0 else 'limit_reached'
+        })
+    except Exception as e:
+        return error_response(f'Error getting usage stats: {str(e)}', 500)
+
+
+@api_bp.route('/usage/reset', methods=['POST'])
+def reset_api_usage():
+    """POST /api/usage/reset - Manually reset API usage (for testing)"""
+    try:
+        from services.rapidapi_service import RapidAPIService
+        rapidapi_service = RapidAPIService()
+        rapidapi_service.usage_tracker.force_reset()
+
+        return success_response(message='API usage counter reset successfully')
+    except Exception as e:
+        return error_response(f'Error resetting usage: {str(e)}', 500)
+
 # ==================== API INFO ENDPOINT ====================
 
 @api_bp.route('/', methods=['GET'])
