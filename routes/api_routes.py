@@ -1,3 +1,7 @@
+"""
+API Routes - RESTful API endpoints for MovieWeb application.
+Provides JSON API for all core functionality including users, movies, and reviews.
+"""
 from flask import Blueprint, jsonify, request
 from services.user_service import UserService
 from services.movie_service import MovieService
@@ -15,12 +19,24 @@ review_service = ReviewService()
 
 
 def error_response(message, status_code=400):
-    """Create standardized error response"""
+    """
+    Create standardized error response.
+
+    :param message: Error message to return
+    :param status_code: HTTP status code
+    :return: Flask JSON response tuple
+    """
     return jsonify({'error': message, 'success': False}), status_code
 
 
 def success_response(data=None, message=None):
-    """Create standardized success response"""
+    """
+    Create standardized success response.
+
+    :param data: Data to include in response
+    :param message: Success message
+    :return: Flask JSON response
+    """
     response = {'success': True}
     if data is not None:
         response['data'] = data
@@ -29,9 +45,31 @@ def success_response(data=None, message=None):
     return jsonify(response)
 
 
-def handle_service_exceptions(func):
-    """Decorator to handle common service exceptions in API routes"""
+def clean_string_data(data, fields):
+    """
+    Clean and validate string fields from request data.
 
+    :param data: Dictionary containing request data
+    :param fields: List of field names to clean
+    :return: Dictionary with cleaned string fields
+    """
+    cleaned = {}
+    for field in fields:
+        value = data.get(field)
+        if value is not None:
+            cleaned[field] = str(value).strip()
+        else:
+            cleaned[field] = ''
+    return cleaned
+
+
+def handle_service_exceptions(func):
+    """
+    Decorator to handle common service exceptions in API routes.
+
+    :param func: Function to wrap
+    :return: Wrapped function with exception handling
+    """
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -61,7 +99,11 @@ def handle_service_exceptions(func):
 @api_bp.route('/users', methods=['GET'])
 @handle_service_exceptions
 def api_get_users():
-    """GET /api/users - Get all users"""
+    """
+    Get all users.
+
+    :return: JSON response with list of all users
+    """
     users = user_service.get_all_users()
     return success_response(users)
 
@@ -69,16 +111,16 @@ def api_get_users():
 @api_bp.route('/users', methods=['POST'])
 @handle_service_exceptions
 def api_create_user():
-    """POST /api/users - Create a new user"""
+    """
+    Create a new user.
+
+    :return: JSON response with created user data and 201 status
+    """
     data = request.get_json()
     if not data:
         return error_response('No JSON data provided')
 
-    clean_data = {
-        'name': str(data.get('name', '')).strip(),
-        'email': str(data.get('email', '')).strip()
-    }
-
+    clean_data = clean_string_data(data, ['name', 'email'])
     new_user = user_service.create_user(clean_data)
     return success_response(new_user, 'User created successfully'), 201
 
@@ -86,7 +128,12 @@ def api_create_user():
 @api_bp.route('/users/<int:user_id>', methods=['GET'])
 @handle_service_exceptions
 def api_get_user(user_id):
-    """GET /api/users/{id} - Get specific user"""
+    """
+    Get specific user by ID.
+
+    :param user_id: ID of the user to retrieve
+    :return: JSON response with user data
+    """
     user = user_service.get_user_by_id(user_id)
     return success_response(user)
 
@@ -96,9 +143,13 @@ def api_get_user(user_id):
 @api_bp.route('/users/<int:user_id>/movies', methods=['GET'])
 @handle_service_exceptions
 def api_get_user_movies(user_id):
-    """GET /api/users/{id}/movies - Get user's movies"""
-    user_service.get_user_by_id(user_id)
+    """
+    Get all movies for a specific user.
 
+    :param user_id: ID of the user
+    :return: JSON response with list of user's movies
+    """
+    user_service.get_user_by_id(user_id)
     movies = movie_service.get_user_movies(user_id)
     return success_response(movies)
 
@@ -106,21 +157,23 @@ def api_get_user_movies(user_id):
 @api_bp.route('/users/<int:user_id>/movies', methods=['POST'])
 @handle_service_exceptions
 def api_create_movie(user_id):
-    """POST /api/users/{id}/movies - Add movie to user"""
+    """
+    Add a movie to a user's collection.
+
+    :param user_id: ID of the user
+    :return: JSON response with created movie data and 201 status
+    """
     data = request.get_json()
     if not data:
         return error_response('No JSON data provided')
 
-    #User Validation
     user_service.get_user_by_id(user_id)
 
-    clean_data = {
-        'title': str(data.get('title', '')).strip(),
-        'director': str(data.get('director', '')).strip(),
+    clean_data = clean_string_data(data, ['title', 'director', 'genre'])
+    clean_data.update({
         'year': data.get('year'),
-        'genre': str(data.get('genre', '')).strip(),
         'rating': data.get('rating')
-    }
+    })
 
     new_movie = movie_service.create_movie_for_user(user_id, clean_data)
     return success_response(new_movie, 'Movie added successfully'), 201
@@ -129,7 +182,12 @@ def api_create_movie(user_id):
 @api_bp.route('/movies/<int:movie_id>', methods=['GET'])
 @handle_service_exceptions
 def api_get_movie(movie_id):
-    """GET /api/movies/{id} - Get specific movie with reviews"""
+    """
+    Get specific movie with its reviews.
+
+    :param movie_id: ID of the movie to retrieve
+    :return: JSON response with movie data and reviews
+    """
     movie, user_id = movie_service.get_movie_by_id(movie_id)
     reviews = review_service.get_movie_reviews(movie_id)
 
@@ -145,27 +203,23 @@ def api_get_movie(movie_id):
 @api_bp.route('/movies/<int:movie_id>', methods=['PUT'])
 @handle_service_exceptions
 def api_update_movie(movie_id):
-    """PUT /api/movies/{id} - Update movie"""
+    """
+    Update a movie's details.
+
+    :param movie_id: ID of the movie to update
+    :return: JSON response with updated movie data
+    """
     data = request.get_json()
     if not data:
         return error_response('No JSON data provided')
 
+    string_fields = ['title', 'director', 'year', 'genre', 'rating']
     clean_data = {}
 
-    if 'title' in data:
-        clean_data['title'] = str(data['title']).strip() if data['title'] is not None else ''
-
-    if 'director' in data:
-        clean_data['director'] = str(data['director']).strip() if data['director'] is not None else ''
-
-    if 'year' in data:
-        clean_data['year'] = str(data['year']).strip() if data['year'] is not None else ''
-
-    if 'genre' in data:
-        clean_data['genre'] = str(data['genre']).strip() if data['genre'] is not None else ''
-
-    if 'rating' in data:
-        clean_data['rating'] = str(data['rating']).strip() if data['rating'] is not None else ''
+    for field in string_fields:
+        if field in data:
+            value = data[field]
+            clean_data[field] = str(value).strip() if value is not None else ''
 
     result = movie_service.update_movie(movie_id, clean_data)
     return success_response(result, 'Movie updated successfully')
@@ -174,7 +228,12 @@ def api_update_movie(movie_id):
 @api_bp.route('/movies/<int:movie_id>', methods=['DELETE'])
 @handle_service_exceptions
 def api_delete_movie(movie_id):
-    """DELETE /api/movies/{id} - Delete movie"""
+    """
+    Delete a movie.
+
+    :param movie_id: ID of the movie to delete
+    :return: JSON response confirming deletion
+    """
     movie_service.delete_movie(movie_id)
     return success_response(message='Movie deleted successfully')
 
@@ -184,7 +243,12 @@ def api_delete_movie(movie_id):
 @api_bp.route('/movies/<int:movie_id>/reviews', methods=['GET'])
 @handle_service_exceptions
 def api_get_movie_reviews(movie_id):
-    """GET /api/movies/{id}/reviews - Get all reviews for a movie"""
+    """
+    Get all reviews for a specific movie.
+
+    :param movie_id: ID of the movie
+    :return: JSON response with list of reviews
+    """
     reviews = review_service.get_movie_reviews(movie_id)
     return success_response(reviews)
 
@@ -192,7 +256,12 @@ def api_get_movie_reviews(movie_id):
 @api_bp.route('/movies/<int:movie_id>/reviews', methods=['POST'])
 @handle_service_exceptions
 def api_create_review(movie_id):
-    """POST /api/movies/{id}/reviews - Add review to movie"""
+    """
+    Add a review to a movie.
+
+    :param movie_id: ID of the movie to review
+    :return: JSON response with created review data and 201 status
+    """
     data = request.get_json()
     if not data:
         return error_response('No JSON data provided')
@@ -204,19 +273,25 @@ def api_create_review(movie_id):
 @api_bp.route('/reviews/<int:review_id>', methods=['PUT'])
 @handle_service_exceptions
 def api_update_review(review_id):
-    """PUT /api/reviews/{id} - Update review"""
+    """
+    Update a review.
+
+    :param review_id: ID of the review to update
+    :return: JSON response with updated review data
+    """
     data = request.get_json()
     if not data:
         return error_response('No JSON data provided')
 
     clean_data = {}
-
     if 'content' in data:
-        clean_data['content'] = str(data['content']).strip() if data['content'] is not None else ''
+        clean_data['content'] = str(data['content']).strip() \
+                                if data['content'] is not None else ''
 
     if 'reviewer_rating' in data:
         clean_data['reviewer_rating'] = str(data['reviewer_rating']).strip() \
-            if data['reviewer_rating'] is not None else ''
+                                        if data['reviewer_rating'] is not None \
+                                        else ''
 
     result = review_service.update_review(review_id, clean_data)
     return success_response(result, 'Review updated successfully')
@@ -225,7 +300,12 @@ def api_update_review(review_id):
 @api_bp.route('/reviews/<int:review_id>', methods=['DELETE'])
 @handle_service_exceptions
 def api_delete_review(review_id):
-    """DELETE /api/reviews/{id} - Delete review"""
+    """
+    Delete a review.
+
+    :param review_id: ID of the review to delete
+    :return: JSON response confirming deletion
+    """
     review_service.delete_review(review_id)
     return success_response(message='Review deleted successfully')
 
@@ -233,14 +313,23 @@ def api_delete_review(review_id):
 @api_bp.route('/reviews/<int:review_id>/like', methods=['POST'])
 @handle_service_exceptions
 def api_like_review(review_id):
-    """POST /api/reviews/{id}/like - Like a review"""
+    """
+    Like a review (increment like count).
+
+    :param review_id: ID of the review to like
+    :return: JSON response with updated review data
+    """
     result = review_service.like_review(review_id)
     return success_response(result, 'Review liked successfully')
 
 
 @api_bp.route('/usage', methods=['GET'])
 def api_usage_stats():
-    """GET /api/usage - Get API usage statistics"""
+    """
+    Get API usage statistics.
+
+    :return: JSON response with current API usage statistics
+    """
     try:
         from services.rapidapi_service import RapidAPIService
         rapidapi_service = RapidAPIService()
@@ -256,7 +345,11 @@ def api_usage_stats():
 
 @api_bp.route('/usage/reset', methods=['POST'])
 def reset_api_usage():
-    """POST /api/usage/reset - Manually reset API usage (for testing)"""
+    """
+    Manually reset API usage counter (for testing).
+
+    :return: JSON response confirming usage reset
+    """
     try:
         from services.rapidapi_service import RapidAPIService
         rapidapi_service = RapidAPIService()
@@ -269,7 +362,11 @@ def reset_api_usage():
 
 @api_bp.route('/test-apis', methods=['GET'])
 def test_apis():
-    """GET /api/test-apis - Test both RapidAPI and OpenAI connections"""
+    """
+    Test both RapidAPI and OpenAI connections.
+
+    :return: JSON response with API connection test results
+    """
     try:
         from services.trivia_service import TriviaService
         trivia_service = TriviaService()
@@ -298,7 +395,11 @@ def test_apis():
 
 @api_bp.route('/', methods=['GET'])
 def api_info():
-    """GET /api/ - API information"""
+    """
+    Get API information and available endpoints.
+
+    :return: JSON response with API documentation
+    """
     endpoints = {
         'users': {
             'GET /api/users': 'Get all users',
