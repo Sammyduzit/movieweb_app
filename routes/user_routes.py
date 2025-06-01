@@ -1,4 +1,9 @@
+"""
+User Routes - Web routes for user management functionality.
+Handles user listing and creation operations.
+"""
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+
 from services.user_service import UserService
 from exceptions import ValidationError, DatabaseError
 
@@ -9,7 +14,11 @@ user_service = UserService()
 
 @user_bp.route('/')
 def list_users():
-    """Display all users in an HTML template."""
+    """
+    Display all users in an HTML template.
+
+    :return: Rendered template with list of all users
+    """
     try:
         users = user_service.get_all_users()
         return render_template('users.html', users=users)
@@ -25,7 +34,11 @@ def list_users():
 
 @user_bp.route('/add', methods=['GET', 'POST'])
 def add_user():
-    """Add a new user to the database."""
+    """
+    Add a new user to the database.
+
+    :return: Rendered template for GET, redirect for successful POST
+    """
     if request.method == 'POST':
         try:
             user_data = {
@@ -39,7 +52,8 @@ def add_user():
 
         except ValidationError as e:
             if e.field == 'email' and 'already exists' in e.message:
-                flash('Email already exists. Please use a different email.', 'error')
+                flash('Email already exists. Please use a different email.',
+                      'error')
             else:
                 flash(f'Validation error: {e.message}', 'error')
             return render_template('add_user.html')
