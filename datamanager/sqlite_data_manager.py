@@ -1,8 +1,8 @@
 from config import LeaderboardConfig
 from .data_manager_interface import DataManagerInterface
-from .data_models import User, Movie
+from .data_models import User, Movie, Review, TriviaScore
 from .database import db
-from flask import current_app
+
 
 class SQLiteDataManager(DataManagerInterface):
     """SQLite implementation of the DataManagerInterface using SQLAlchemy ORM"""
@@ -79,7 +79,6 @@ class SQLiteDataManager(DataManagerInterface):
             db.session.rollback()
             raise
 
-
     def add_movie(self, movie_data):
         """
         Add a new movie to the database.
@@ -120,21 +119,13 @@ class SQLiteDataManager(DataManagerInterface):
         if not movie:
             return None
 
-        if 'title' in updated_data:
-            movie.title = updated_data['title']
-        if 'director' in updated_data:
-            movie.director = updated_data['director']
-        if 'year' in updated_data:
-            movie.year = updated_data['year']
-        if 'rating' in updated_data:
-            movie.rating = updated_data['rating']
-        if 'genre' in updated_data:
-            movie.genre = updated_data['genre']
-        if 'poster' in updated_data:
-            movie.poster = updated_data['poster']
+        allowed_fields = {'title', 'director', 'year', 'rating', 'genre', 'poster'}
+
+        for field, value in updated_data.items():
+            if field in allowed_fields:
+                setattr(movie, field, value)
 
         db.session.commit()
-
         return movie.to_dict()
 
     def delete_movie(self, movie_id):
@@ -154,9 +145,13 @@ class SQLiteDataManager(DataManagerInterface):
         return True
 
     def add_review(self, movie_id, review_data):
-        """Add a review to a movie"""
-        from .data_models import Review
+        """
+        Add a review to a movie.
 
+        :param movie_id: The ID of the movie to review
+        :param review_data: Dictionary containing review data
+        :return: Dictionary representation of the created review
+        """
         movie = Movie.query.get(movie_id)
         if not movie:
             raise ValueError(f"Movie with ID {movie_id} not found")
@@ -172,14 +167,22 @@ class SQLiteDataManager(DataManagerInterface):
         return new_review.to_dict()
 
     def get_movie_reviews(self, movie_id):
-        """Get all reviews for a specific movie"""
-        from .data_models import Review
+        """
+        Get all reviews for a specific movie.
+
+        :param movie_id: The ID of the movie
+        :return: List of review dictionaries
+        """
         reviews = Review.query.filter_by(movie_id=movie_id).all()
         return [review.to_dict() for review in reviews]
 
     def like_review(self, review_id):
-        """Increment likes for a review"""
-        from .data_models import Review
+        """
+        Increment likes for a review.
+
+        :param review_id: The ID of the review to like
+        :return: Dictionary representation of the updated review or None if not found
+        """
         review = Review.query.get(review_id)
         if review:
             review.likes += 1
@@ -188,27 +191,34 @@ class SQLiteDataManager(DataManagerInterface):
         return None
 
     def update_review(self, review_id, updated_data):
-        """Update a review by ID"""
-        from .data_models import Review
+        """
+        Update a review by ID.
 
+        :param review_id: The ID of the review to update
+        :param updated_data: Dictionary containing updated review data
+        :return: Dictionary representation of the updated review or None if not found
+        """
         review = Review.query.get(review_id)
         if not review:
             return None
 
-        if 'content' in updated_data:
-            review.content = updated_data['content']
-        if 'reviewer_rating' in updated_data:
-            review.reviewer_rating = updated_data['reviewer_rating']
+        allowed_fields = {'content', 'reviewer_rating'}
+
+        for field, value in updated_data.items():
+            if field in allowed_fields:
+                setattr(review, field, value)
 
         review.updated_at = db.func.current_timestamp()
-
         db.session.commit()
         return review.to_dict()
 
     def delete_review(self, review_id):
-        """Delete a review by ID"""
-        from .data_models import Review
+        """
+        Delete a review by ID.
 
+        :param review_id: The ID of the review to delete
+        :return: True if deleted successfully, False if review not found
+        """
         review = Review.query.get(review_id)
         if not review:
             return False
@@ -218,9 +228,12 @@ class SQLiteDataManager(DataManagerInterface):
         return True
 
     def save_trivia_score(self, score_data):
-        """Save a trivia score to the database"""
-        from .data_models import TriviaScore
+        """
+        Save a trivia score to the database.
 
+        :param score_data: Dictionary containing trivia score data
+        :return: Dictionary representation of the saved trivia score
+        """
         new_score = TriviaScore(
             user_id=score_data['user_id'],
             trivia_type=score_data['trivia_type'],
@@ -236,15 +249,21 @@ class SQLiteDataManager(DataManagerInterface):
         return new_score.to_dict()
 
     def get_global_leaderboard(self, limit=10):
-        """Get global trivia leaderboard (best scores across all trivia)"""
-        from .data_models import TriviaScore, User
+        """
+        Get global trivia leaderboard (best scores across all trivia).
 
-        # Get best scores with user info
-        scores = db.session.query(TriviaScore, User).join(User).order_by(
-            TriviaScore.percentage.desc(),
-            TriviaScore.score.desc(),
-            TriviaScore.created_at.asc()
-        ).limit(limit).all()
+        :param limit: Maximum number of entries to return
+        :return: List of leaderboard entries with user information
+        """
+        scores = (db.session.query(TriviaScore, User)
+                  .join(User)
+                  .order_by(
+                      TriviaScore.percentage.desc(),
+                      TriviaScore.score.desc(),
+                      TriviaScore.created_at.asc()
+                  )
+                  .limit(limit)
+                  .all())
 
         leaderboard = []
         for score, user in scores:
@@ -255,17 +274,26 @@ class SQLiteDataManager(DataManagerInterface):
         return leaderboard
 
     def get_movie_leaderboard(self, movie_id, limit=10):
-        """Get leaderboard for specific movie"""
-        from .data_models import TriviaScore, User
+        """
+        Get leaderboard for specific movie.
 
-        scores = db.session.query(TriviaScore, User).join(User).filter(
-            TriviaScore.movie_id == movie_id,
-            TriviaScore.trivia_type == 'movie'
-        ).order_by(
-            TriviaScore.percentage.desc(),
-            TriviaScore.score.desc(),
-            TriviaScore.created_at.asc()
-        ).limit(limit).all()
+        :param movie_id: The ID of the movie
+        :param limit: Maximum number of entries to return
+        :return: List of leaderboard entries for the specific movie
+        """
+        scores = (db.session.query(TriviaScore, User)
+                  .join(User)
+                  .filter(
+                      TriviaScore.movie_id == movie_id,
+                      TriviaScore.trivia_type == 'movie'
+                  )
+                  .order_by(
+                      TriviaScore.percentage.desc(),
+                      TriviaScore.score.desc(),
+                      TriviaScore.created_at.asc()
+                  )
+                  .limit(limit)
+                  .all())
 
         leaderboard = []
         for score, user in scores:
@@ -276,16 +304,22 @@ class SQLiteDataManager(DataManagerInterface):
         return leaderboard
 
     def get_collection_leaderboard(self, limit=10):
-        """Get leaderboard for collection trivia"""
-        from .data_models import TriviaScore, User
+        """
+        Get leaderboard for collection trivia.
 
-        scores = db.session.query(TriviaScore, User).join(User).filter(
-            TriviaScore.trivia_type == 'collection'
-        ).order_by(
-            TriviaScore.percentage.desc(),
-            TriviaScore.score.desc(),
-            TriviaScore.created_at.asc()
-        ).limit(limit).all()
+        :param limit: Maximum number of entries to return
+        :return: List of leaderboard entries for collection trivia
+        """
+        scores = (db.session.query(TriviaScore, User)
+                  .join(User)
+                  .filter(TriviaScore.trivia_type == 'collection')
+                  .order_by(
+                      TriviaScore.percentage.desc(),
+                      TriviaScore.score.desc(),
+                      TriviaScore.created_at.asc()
+                  )
+                  .limit(limit)
+                  .all())
 
         leaderboard = []
         for score, user in scores:
@@ -296,12 +330,13 @@ class SQLiteDataManager(DataManagerInterface):
         return leaderboard
 
     def get_user_trivia_stats(self, user_id):
-        """Get trivia statistics for a specific user"""
-        from .data_models import TriviaScore
+        """
+        Get trivia statistics for a specific user.
 
-        stats = db.session.query(TriviaScore).filter(
-            TriviaScore.user_id == user_id
-        ).all()
+        :param user_id: The ID of the user
+        :return: Dictionary containing comprehensive user trivia statistics
+        """
+        stats = TriviaScore.query.filter(TriviaScore.user_id == user_id).all()
 
         if not stats:
             return {
@@ -318,11 +353,16 @@ class SQLiteDataManager(DataManagerInterface):
         best_score = max(s.percentage for s in stats)
         average_score = round(sum(s.percentage for s in stats) / total_attempts)
 
+        recent_limit = LeaderboardConfig.USER_STATS_RECENT_LIMIT
+        recent_scores = [s.to_dict() for s in sorted(
+            stats, key=lambda x: x.created_at, reverse=True
+        )[:recent_limit]]
+
         return {
             'total_attempts': total_attempts,
             'best_score': best_score,
             'average_score': average_score,
             'movie_attempts': movie_attempts,
             'collection_attempts': collection_attempts,
-            'recent_scores': [s.to_dict() for s in sorted(stats, key=lambda x: x.created_at, reverse=True)[:LeaderboardConfig.USER_STATS_RECENT_LIMIT]]
+            'recent_scores': recent_scores
         }
