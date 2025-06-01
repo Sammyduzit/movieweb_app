@@ -1,10 +1,14 @@
 """
 OpenAI Service - ChatGPT API fallback for trivia generation.
 """
-from config import TriviaConfig, APIConfig
-import requests
-import json
 import os
+
+import requests
+
+from config import TriviaConfig, APIConfig
+
+import json
+
 from dotenv import load_dotenv
 
 load_dotenv()
