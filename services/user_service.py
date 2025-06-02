@@ -2,7 +2,6 @@
 User Service - Business logic for user operations.
 """
 import re
-
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from config import ValidationConfig
@@ -114,3 +113,38 @@ class UserService:
             raise ValidationError('email', 'Email already exists')
         except SQLAlchemyError as e:
             raise DatabaseError('creating user', e)
+
+    def update_user(self, user_id, user_data):
+        """
+        Update existing user with validation.
+
+        :param user_id: ID of the user to update
+        :param user_data: Dictionary containing updated user data
+        :return: Dictionary representation of updated user
+        """
+        validated_data = self.validate_user_data(user_data)
+
+        try:
+            result = self.data_manager.update_user(user_id, validated_data)
+            if not result:
+                raise UserNotFoundError(user_id)
+            return result
+        except IntegrityError:
+            raise ValidationError('email', 'Email already exists')
+        except SQLAlchemyError as e:
+            raise DatabaseError('updating user', e)
+
+    def delete_user(self, user_id):
+        """
+        Delete user by ID.
+
+        :param user_id: ID of the user to delete
+        :return: True if successful
+        """
+        try:
+            success = self.data_manager.delete_user(user_id)
+            if not success:
+                raise UserNotFoundError(user_id)
+            return True
+        except SQLAlchemyError as e:
+            raise DatabaseError('deleting user', e)
