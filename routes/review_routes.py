@@ -32,8 +32,6 @@ def extract_review_data_from_form():
     }
 
 
-# ==================== REVIEW CREATION ====================
-
 @review_bp.route('/add_review', methods=['POST'])
 @require_user_and_movie
 def add_review(user_id, movie_id, user, movie):
@@ -65,8 +63,6 @@ def add_review(user_id, movie_id, user, movie):
                             movie_id=movie_id))
 
 
-# ==================== REVIEW INTERACTION ====================
-
 @review_bp.route('/like_review/<int:review_id>')
 @require_user_and_movie
 def like_review(user_id, movie_id, review_id, user, movie):
@@ -97,8 +93,6 @@ def like_review(user_id, movie_id, review_id, user, movie):
                             user_id=user_id,
                             movie_id=movie_id))
 
-
-# ==================== REVIEW MODIFICATION ====================
 
 @review_bp.route('/edit_review/<int:review_id>', methods=['GET', 'POST'])
 @require_user_and_movie
@@ -161,8 +155,6 @@ def edit_review(user_id, movie_id, review_id, user, movie):
                                 user_id=user_id,
                                 movie_id=movie_id))
 
-
-# ==================== REVIEW DELETION ====================
 
 @review_bp.route('/delete_review/<int:review_id>')
 @require_user_and_movie

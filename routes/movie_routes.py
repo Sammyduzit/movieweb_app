@@ -7,8 +7,8 @@ from services.movie_service import MovieService
 from services.review_service import ReviewService
 from services.user_service import UserService
 from exceptions import (
-    UserNotFoundError, MovieNotFoundError, ValidationError,
-    DatabaseError, ExternalAPIError, DuplicateMovieError
+    MovieNotFoundError, ValidationError,DatabaseError,
+    ExternalAPIError, DuplicateMovieError
 )
 from utils.decorators import require_user, require_user_and_movie
 
@@ -33,8 +33,6 @@ def extract_movie_data_from_form():
         'rating': request.form.get('rating', '').strip()
     }
 
-
-# ==================== MOVIE LISTING ====================
 
 @movie_bp.route('/')
 @require_user
@@ -86,8 +84,6 @@ def movie_detail(user_id, movie_id, user, movie):
         return redirect(url_for('movies.user_movies', user_id=user_id))
 
 
-# ==================== MOVIE CREATION ====================
-
 @movie_bp.route('/add_movie', methods=['GET', 'POST'])
 @require_user
 def add_movie(user_id, user):
@@ -128,8 +124,6 @@ def add_movie(user_id, user):
 
     return render_template('add_movie.html', user=user)
 
-
-# ==================== MOVIE MODIFICATION ====================
 
 @movie_bp.route('/update_movie/<int:movie_id>', methods=['GET', 'POST'])
 @require_user_and_movie
@@ -180,8 +174,6 @@ def update_movie(user_id, movie_id, user, movie):
                            user=user,
                            movie=movie)
 
-
-# ==================== MOVIE DELETION ====================
 
 @movie_bp.route('/delete_movie/<int:movie_id>')
 @require_user

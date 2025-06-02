@@ -1,29 +1,65 @@
 from config import DatabaseConfig, AppConfig
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from flask import Flask, redirect, url_for, render_template, request
-from datamanager import init_database, User, Movie, SQLiteDataManager
+from flask import Flask, redirect, url_for
+from datamanager import init_database
 from routes import user_bp, movie_bp, review_bp, api_bp, trivia_bp, homepage_bp
 from utils.template_helpers import register_template_helpers
+from utils.app_helpers import register_error_handlers, print_startup_info
 import os
 
 
 def create_app():
-    """Application factory function to create and configure the Flask app."""
+    """
+    Application factory function to create and configure the Flask app.
+
+    :return: Configured Flask application instance
+    """
     app = Flask(__name__)
 
+    _configure_database(app)
+    _configure_app_settings(app)
+
+    init_database(app)
+    register_template_helpers(app)
+
+    _register_blueprints(app)
+    register_error_handlers(app)
+    _register_routes(app)
+
+    return app
+
+
+def _configure_database(app):
+    """
+    Configure database settings for the Flask app.
+
+    :param app: Flask application instance
+    """
     base_dir = os.path.abspath(os.path.dirname(__file__))
     data_dir = os.path.join(base_dir, DatabaseConfig.INSTANCE_FOLDER)
     os.makedirs(data_dir, exist_ok=True)
     db_path = os.path.join(data_dir, DatabaseConfig.DB_FILENAME)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = DatabaseConfig.TRACK_MODIFICATIONS
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = (
+        DatabaseConfig.TRACK_MODIFICATIONS
+    )
+
+
+def _configure_app_settings(app):
+    """
+    Configure general Flask application settings.
+
+    :param app: Flask application instance
+    """
     app.config['SECRET_KEY'] = AppConfig.SECRET_KEY
 
-    init_database(app)
 
-    register_template_helpers(app)
+def _register_blueprints(app):
+    """
+    Register all application blueprints.
 
+    :param app: Flask application instance
+    """
     app.register_blueprint(user_bp)
     app.register_blueprint(movie_bp)
     app.register_blueprint(review_bp)
@@ -31,100 +67,34 @@ def create_app():
     app.register_blueprint(trivia_bp)
     app.register_blueprint(homepage_bp)
 
+
+def _register_routes(app):
+    """
+    Register application routes.
+
+    :param app: Flask application instance
+    """
     @app.route('/')
     def index():
         """Redirect to homepage"""
         return redirect(url_for('homepage.homepage'))
 
-    @app.errorhandler(400)
-    def bad_request(error):
-        """Handle 400 Bad Request errors"""
-        return render_template('error.html',
-                               error_code=400,
-                               error_message="Bad request - invalid input provided",
-                               back_url=request.referrer or url_for('users.list_users'),
-                               home_url=url_for('users.list_users')), 400
-
-    @app.errorhandler(403)
-    def forbidden(error):
-        """Handle 403 Forbidden errors"""
-        return render_template('error.html',
-                               error_code=403,
-                               error_message="Access forbidden - you don't have permission",
-                               back_url=request.referrer or url_for('users.list_users'),
-                               home_url=url_for('users.list_users')), 403
-
-    @app.errorhandler(404)
-    def not_found(error):
-        """Handle 404 errors"""
-        return render_template('error.html',
-                               error_code=404,
-                               error_message="Page not found",
-                               back_url=request.referrer or url_for('users.list_users'),
-                               home_url=url_for('users.list_users')), 404
-
-    @app.errorhandler(405)
-    def method_not_allowed(error):
-        """Handle 405 Method Not Allowed errors"""
-        return render_template('error.html',
-                               error_code=405,
-                               error_message="Method not allowed for this endpoint",
-                               back_url=request.referrer or url_for('users.list_users'),
-                               home_url=url_for('users.list_users')), 405
-
-    @app.errorhandler(500)
-    def internal_error(error):
-        """Handle 500 errors"""
-        return render_template('error.html',
-                               error_code=500,
-                               error_message="Internal server error - something went wrong",
-                               back_url=request.referrer or url_for('users.list_users'),
-                               home_url=url_for('users.list_users')), 500
-
-    @app.errorhandler(503)
-    def service_unavailable(error):
-        """Handle 503 Service Unavailable errors"""
-        return render_template('error.html',
-                               error_code=503,
-                               error_message="Service temporarily unavailable - please try again later",
-                               back_url=request.referrer or url_for('users.list_users'),
-                               home_url=url_for('users.list_users')), 503
-
-    return app
-
 
 def main():
-    """Main function to run the application"""
+    """
+    Main function to run the application in production mode.
+
+    :return: None
+    """
     app = create_app()
 
-    with app.app_context():
-        try:
-            print("Testing data manager...")
+    print_startup_info()
 
-            data_manager = SQLiteDataManager()
-
-            users = data_manager.get_all_users()
-            if not users:
-                user_data = {
-                    'name': 'John Doe',
-                    'email': 'john.doe@example.com'
-                }
-                new_user = data_manager.add_user(user_data)
-                print(f"Added sample user: {new_user}")
-
-            print(f"Total users: {len(data_manager.get_all_users())}")
-
-        except SQLAlchemyError as e:
-            print(f"Database error during testing: {e}")
-        except Exception as e:
-            print(f"Error during testing: {e}")
-
-    print("Starting Flask server...")
-    print("Access users at: http://127.0.0.1:5002/users")
-    print("- http://127.0.0.1:5002/users (List all users)")
-    print("- http://127.0.0.1:5002/add_user (Add new user)")
-    print("- OMDb API integration enabled (set OMDB_API_KEY environment variable)")
-    app.run(host=AppConfig.HOST, port=AppConfig.PORT, debug=AppConfig.DEBUG)
+    app.run(
+        host=AppConfig.HOST,
+        port=AppConfig.PORT,
+        debug=AppConfig.DEBUG
+    )
 
 
 if __name__ == "__main__":

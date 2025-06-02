@@ -3,9 +3,13 @@ API Routes - RESTful API endpoints for MovieWeb application.
 Provides JSON API for all core functionality including users, movies, and reviews.
 """
 from flask import Blueprint, jsonify, request
-from services.user_service import UserService
+
 from services.movie_service import MovieService
+from services.rapidapi_service import RapidAPIService
 from services.review_service import ReviewService
+from services.trivia_service import TriviaService
+from services.user_service import UserService
+
 from exceptions import (
     UserNotFoundError, MovieNotFoundError, ReviewNotFoundError,
     ValidationError, DatabaseError, ExternalAPIError, DuplicateMovieError
@@ -13,9 +17,11 @@ from exceptions import (
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-user_service = UserService()
 movie_service = MovieService()
+rapidapi_service = RapidAPIService()
 review_service = ReviewService()
+trivia_service = TriviaService()
+user_service = UserService()
 
 
 def error_response(message, status_code=400):
@@ -331,8 +337,6 @@ def api_usage_stats():
     :return: JSON response with current API usage statistics
     """
     try:
-        from services.rapidapi_service import RapidAPIService
-        rapidapi_service = RapidAPIService()
         stats = rapidapi_service.usage_tracker.get_usage_stats()
 
         return success_response({
@@ -351,8 +355,6 @@ def reset_api_usage():
     :return: JSON response confirming usage reset
     """
     try:
-        from services.rapidapi_service import RapidAPIService
-        rapidapi_service = RapidAPIService()
         rapidapi_service.usage_tracker.force_reset()
 
         return success_response(message='API usage counter reset successfully')
@@ -368,8 +370,6 @@ def test_apis():
     :return: JSON response with API connection test results
     """
     try:
-        from services.trivia_service import TriviaService
-        trivia_service = TriviaService()
         test_results = trivia_service.test_apis()
 
         status_msg = []

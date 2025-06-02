@@ -6,13 +6,16 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 
 from config import TriviaConfig
 from services.mock_trivia_service import MockTriviaService
+from services.rapidapi_service import RapidAPIService
 from services.trivia_service import TriviaService
+from utils.decorators import require_user, require_user_and_movie
+
 from exceptions import (
     TriviaError, UserNotFoundError, MovieNotFoundError,
     InsufficientMoviesError, ExternalAPIError
 )
-from utils.decorators import require_user, require_user_and_movie
 
+rapidapi_service = RapidAPIService()
 trivia_bp = Blueprint('trivia', __name__)
 trivia_service = TriviaService()
 
@@ -24,8 +27,6 @@ def get_api_status():
     :return: Dictionary containing API status information
     """
     try:
-        from services.rapidapi_service import RapidAPIService
-        rapidapi_service = RapidAPIService()
         stats = rapidapi_service.usage_tracker.get_usage_stats()
         return {
             'api_available': stats['remaining'] > 0,
