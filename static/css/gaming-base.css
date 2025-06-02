@@ -112,16 +112,11 @@ body {
 }
 
 .float-up {
-    animation: floatUp 0.6s ease-out forwards;
+    animation: floatUp 0.3s ease-out forwards;
     opacity: 0;
 }
 
-.float-up:nth-child(1) { animation-delay: 0.1s; }
-.float-up:nth-child(2) { animation-delay: 0.2s; }
-.float-up:nth-child(3) { animation-delay: 0.3s; }
-.float-up:nth-child(4) { animation-delay: 0.4s; }
-.float-up:nth-child(5) { animation-delay: 0.5s; }
-.float-up:nth-child(6) { animation-delay: 0.6s; }
+
 
 /* ========================================
    BACKGROUND ELEMENTS
@@ -218,6 +213,17 @@ body {
     padding-left: 2.5rem;
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(255, 154, 0, 0.4);
+}
+
+.edit-player-btn {
+    background: linear-gradient(45deg, #7f1d1d, #991b1b, #b91c1c);
+    background-size: 300% 300% !important;
+    animation: gradientShift 2s ease infinite;
+}
+
+
+.edit-player-btn:hover {
+    box-shadow: 0 10px 25px rgba(127, 29, 29, 0.4) !important;
 }
 
 /* Button Sizes */

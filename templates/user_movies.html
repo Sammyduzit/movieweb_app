@@ -8,8 +8,12 @@
 {% block og_description %}Check out {{ user.name }}'s amazing movie collection and trivia achievements!{% endblock %}
 
 {% block nav_extra %}
-<!-- User-specific navigation items -->
-<p style="color: #fbbf24;"><b>{{ user.name | truncate_text(15) }}'S ARENA</b></p>
+<div style="display: flex; align-items: center; gap: 1rem;">
+    <p style="color: #fbbf24; margin: 0;"><b>{{ user.name | truncate_text(15) }}'S ARENA</b></p>
+    <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="trivia-btn btn-sm edit-player-btn">
+        ⚙️ EDIT PLAYER
+    </a>
+</div>
 {% endblock %}
 
 {% block extra_css %}
