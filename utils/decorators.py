@@ -2,7 +2,6 @@
 Validation decorators for MovieWeb application.
 Provides reusable decorators for common route validations.
 """
-
 from functools import wraps
 from flask import flash, redirect, url_for
 from services.user_service import UserService
@@ -17,15 +16,17 @@ def require_user(f):
     """
     Decorator that validates user exists and injects user object.
 
-    Usage:
-        @require_user
-        def my_route(user_id, user):  # user object automatically injected
-    """
+    Validates that the user_id parameter corresponds to an existing user
+    and injects the user object into the function parameters.
 
+    :param f: Function to wrap with user validation
+    :return: Wrapped function with user validation and injection
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user_id = kwargs.get('user_id')
         if user_id is None:
+            # Try to find user_id in positional args
             for arg in args:
                 if isinstance(arg, int):
                     user_id = arg
@@ -43,11 +44,9 @@ def require_user(f):
         except UserNotFoundError:
             flash('User not found', 'error')
             return redirect(url_for('users.list_users'))
-
         except DatabaseError as e:
             flash(f'Database error: {e.message}', 'error')
             return redirect(url_for('users.list_users'))
-
         except Exception as e:
             flash(f'Unexpected error: {str(e)}', 'error')
             return redirect(url_for('users.list_users'))
@@ -59,11 +58,12 @@ def require_user_and_movie(f):
     """
     Decorator that validates user and movie exist and injects both objects.
 
-    Usage:
-        @require_user_and_movie
-        def my_route(user_id, movie_id, user, movie):  # both objects injected
-    """
+    Validates that both user_id and movie_id parameters correspond to existing
+    entities where the movie belongs to the user, then injects both objects.
 
+    :param f: Function to wrap with user and movie validation
+    :return: Wrapped function with user and movie validation and injection
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user_id = kwargs.get('user_id')
@@ -75,7 +75,6 @@ def require_user_and_movie(f):
 
         try:
             user = _user_service.get_user_by_id(user_id)
-
             movie = _movie_service.get_movie_for_user(user_id, movie_id)
 
             kwargs['user'] = user
@@ -85,15 +84,12 @@ def require_user_and_movie(f):
         except UserNotFoundError:
             flash('User not found', 'error')
             return redirect(url_for('users.list_users'))
-
         except MovieNotFoundError:
             flash('Movie not found', 'error')
             return redirect(url_for('movies.user_movies', user_id=user_id))
-
         except DatabaseError as e:
             flash(f'Database error: {e.message}', 'error')
             return redirect(url_for('users.list_users'))
-
         except Exception as e:
             flash(f'Unexpected error: {str(e)}', 'error')
             return redirect(url_for('users.list_users'))
@@ -103,13 +99,14 @@ def require_user_and_movie(f):
 
 def require_movie_exists(f):
     """
-    Decorator that validates movie exists across all users (for global movie operations).
+    Decorator that validates movie exists across all users (for global operations).
 
-    Usage:
-        @require_movie_exists
-        def my_route(movie_id, movie, owner_user_id):  # movie and owner_user_id injected
+    Validates that movie_id corresponds to an existing movie regardless of owner
+    and injects both the movie object and the owner's user_id.
+
+    :param f: Function to wrap with global movie validation
+    :return: Wrapped function with movie validation and owner injection
     """
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         movie_id = kwargs.get('movie_id')
@@ -128,11 +125,9 @@ def require_movie_exists(f):
         except MovieNotFoundError:
             flash('Movie not found', 'error')
             return redirect(url_for('users.list_users'))
-
         except DatabaseError as e:
             flash(f'Database error: {e.message}', 'error')
             return redirect(url_for('users.list_users'))
-
         except Exception as e:
             flash(f'Unexpected error: {str(e)}', 'error')
             return redirect(url_for('users.list_users'))
@@ -143,14 +138,13 @@ def require_movie_exists(f):
 def handle_validation_errors(f):
     """
     Decorator that provides consistent error handling for validation errors.
-    Can be combined with other decorators.
 
-    Usage:
-        @handle_validation_errors
-        @require_user
-        def my_route(user_id, user):
+    Can be combined with other decorators to provide additional error handling
+    for functions that might raise validation-related exceptions.
+
+    :param f: Function to wrap with additional error handling
+    :return: Wrapped function with enhanced error handling
     """
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
