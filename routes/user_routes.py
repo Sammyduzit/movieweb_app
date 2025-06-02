@@ -80,6 +80,7 @@ def edit_user(user_id, user):
     :param user: User object (injected by decorator)
     :return: Rendered template for GET, redirect for successful POST
     """
+
     if request.method == 'POST':
         try:
             user_data = {
@@ -90,7 +91,7 @@ def edit_user(user_id, user):
             updated_user = user_service.update_user(user_id, user_data)
             flash(f'User {updated_user["name"]} updated successfully!',
                   'success')
-            return redirect(url_for('users.list_users'))
+            return redirect(url_for('movies.user_movies', user_id=user_id))
 
         except ValidationError as e:
             if e.field == 'email' and 'already exists' in e.message:
@@ -98,17 +99,46 @@ def edit_user(user_id, user):
                       'error')
             else:
                 flash(f'Validation error: {e.message}', 'error')
-            return render_template('edit_user.html', user=user)
+            return render_template('edit_user.html',
+                           user=user,
+                           back_url=f'/users/{user_id}/')
 
         except DatabaseError as e:
             flash(f'Database error: {e.message}', 'error')
-            return render_template('edit_user.html', user=user)
+            return render_template('edit_user.html',
+                                   user=user,
+                                   back_url=f'/users/{user_id}/')
 
         except Exception as e:
             flash(f'Unexpected error updating user: {str(e)}', 'error')
-            return render_template('edit_user.html', user=user)
+            return render_template('edit_user.html',
+                                   user=user,
+                                   back_url=f'/users/{user_id}/')
 
-    return render_template('edit_user.html', user=user, back_url=url_for(users.list_user))
+        #
+        # except ValidationError as e:
+        #     if e.field == 'email' and 'already exists' in e.message:
+        #         flash('Email already exists. Please use a different email.',
+        #               'error')
+        #     else:
+        #         flash(f'Validation error: {e.message}', 'error')
+        #     return render_template('edit_user.html', user=user,
+        #                            back_url=url_for('movies.user_movies', user_id=user_id))
+        #
+        # except DatabaseError as e:
+        #     flash(f'Database error: {e.message}', 'error')
+        #     return render_template('edit_user.html', user=user,
+        #                            back_url=url_for('movies.user_movies', user_id=user_id))
+        #
+        # except Exception as e:
+        #     flash(f'Unexpected error updating user: {str(e)}', 'error')
+        #     return render_template('edit_user.html', user=user,
+        #                            back_url=url_for('movies.user_movies', user_id=user_id))
+
+    back_url = f'/users/{user_id}/'       # <-- HINZUFÜGEN
+    print(f"DEBUG: back_url = {back_url}") # <-- HINZUFÜGEN
+
+    return render_template('edit_user.html', user=user)
 
 
 @user_bp.route('/<int:user_id>/delete')

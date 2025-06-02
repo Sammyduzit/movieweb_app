@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Player - {{ user.name }} - MovieWeb Gaming{% endblock %}
+
+{% block description %}
+Update player credentials and gaming profile information in the MovieWeb arena!
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gaming-forms.css') }}">
+{% endblock %}
+
+{% block nav_cta %}
+<a href="{{ url_for('movies.user_movies', user_id=user.id) }}" class="neon-btn btn-sm">
+    🔙 {{ user.name | truncate_text(10) }}'S ARENA
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-arena">
+    <div class="form-container">
+        <!-- Form Header -->
+        <div class="form-header float-up opacity-0">
+            <h1 class="form-title">
+                ⚙️ Edit Player
+            </h1>
+            <p class="form-subtitle">
+                Update {{ user.name }}'s Gaming Profile
+            </p>
+
+            <!-- Current User Preview -->
+            <div class="form-instructions">
+                <div class="form-instructions-title">🎮 Current Player Data</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div style="text-align: center;">
+                        <div style="color: #3b82f6; font-weight: bold;">Player Name</div>
+                        <div style="color: #e2e8f0;">{{ user.name | truncate_text(25) }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #10b981; font-weight: bold;">Email</div>
+                        <div style="color: #e2e8f0;">{{ user.email | truncate_text(30) }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color: #f59e0b; font-weight: bold;">Player ID</div>
+                        <div style="color: #e2e8f0;">#{{ user.id }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('users.edit_user', user_id=user.id) }}"
+                  id="editUserForm" class="form-grid">
+
+                <!-- Player Name -->
+                <div class="form-field">
+                    <label for="name" class="field-label required">🎭 Player Name</label>
+                    <div class="field-with-icon">
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="field-input"
+                               placeholder="Enter your gaming alias..."
+                               value="{{ user.name }}"
+                               required
+                               maxlength="100"
+                               autocomplete="name">
+                        <span class="field-icon">🎭</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Your legendary name in the gaming arena</span>
+                        <span class="field-counter" id="nameCounter">{{ user.name | length if user.name else 0 }}/100</span>
+                    </div>
+                </div>
+
+                <!-- Email Address -->
+                <div class="form-field">
+                    <label for="email" class="field-label required">📧 Email Address</label>
+                    <div class="field-with-icon">
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               class="field-input"
+                               placeholder="your.email@gaming.arena"
+                               value="{{ user.email }}"
+                               required
+                               maxlength="120"
+                               autocomplete="email">
+                        <span class="field-icon">📧</span>
+                    </div>
+                    <div class="field-enhancement">
+                        <span class="field-hint">Secure your account with a valid email</span>
+                        <span class="field-counter" id="emailCounter">{{ user.email | length if user.email else 0 }}/120</span>
+                    </div>
+                </div>
+
+                <!-- Player Status Indicator -->
+                <div class="api-indicator">
+                    <div class="api-icon">⚡</div>
+                    <div class="api-text">
+                        Updating player profile in the gaming database. All your movies, reviews, and trivia scores will remain intact while your profile gets enhanced!
+                    </div>
+                    <div class="api-status">Ready</div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        🚀 Update Player
+                    </button>
+                    <a href="{{ url_for('movies.user_movies', user_id=user.id) }}"
+                       class="cancel-button">
+                        <span>❌</span>
+                        <span>Cancel</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Danger Zone -->
+        <div style="margin-top: 3rem;">
+            <div style="background: linear-gradient(145deg, #1e293b, #450a0a); border: 2px solid #ef4444; border-radius: 1.5rem; padding: 2rem; position: relative; overflow: hidden;">
+                <div style="position: absolute; inset: 0; padding: 2px; background: linear-gradient(45deg, #ef4444, #dc2626, #ef4444); border-radius: inherit; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: xor; -webkit-mask-composite: xor; opacity: 0.6; animation: gradientShift 4s ease infinite;"></div>
+
+                <div style="position: relative; z-index: 1;">
+                    <h3 style="color: #ef4444; font-family: 'Orbitron', monospace; margin-bottom: 1rem; text-transform: uppercase; font-size: 1.25rem;">
+                        ⚠️ Danger Zone
+                    </h3>
+                    <p style="color: #fca5a5; margin-bottom: 1.5rem; line-height: 1.6;">
+                        <strong>Warning:</strong> Deleting this player will permanently remove ALL associated data including movies, reviews, and trivia scores. This action cannot be undone!
+                    </p>
+
+                    <a href="{{ url_for('users.delete_user', user_id=user.id) }}"
+                       class="delete-button"
+                       onclick="return confirm('⚠️ Are you sure you want to delete {{ user.name }} and ALL associated data (movies, reviews, trivia scores)? This action cannot be undone!')">
+                        <span>🗑️</span>
+                        <span>Delete Player</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.delete-button {
+    background: linear-gradient(45deg, #ef4444, #dc2626);
+    border: 2px solid #ef4444;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 1.5rem;
+    font-size: 1.125rem;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.delete-button:hover {
+    background: linear-gradient(45deg, #dc2626, #b91c1c);
+    border-color: #dc2626;
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(239, 68, 68, 0.5);
+    text-decoration: none;
+    color: white;
+}
+
+.delete-button:active {
+    transform: translateY(0) scale(0.98);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editUserForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const submitButton = document.querySelector('.submit-button');
+
+        // Store original values for change detection
+        const originalName = nameInput.value;
+        const originalEmail = emailInput.value;
+
+        // Character counters
+        function setupCharCounter(input, counterId, maxLength) {
+            const counter = document.getElementById(counterId);
+            if (input && counter) {
+                input.addEventListener('input', function() {
+                    const length = this.value.length;
+                    counter.textContent = `${length}/${maxLength}`;
+
+                    if (length > maxLength * 0.9) {
+                        counter.className = 'field-counter danger';
+                    } else if (length > maxLength * 0.7) {
+                        counter.className = 'field-counter warning';
+                    } else {
+                        counter.className = 'field-counter';
+                    }
+                });
+            }
+        }
+
+        setupCharCounter(nameInput, 'nameCounter', 100);
+        setupCharCounter(emailInput, 'emailCounter', 120);
+
+        // Form validation enhancements
+        function validateField(input, validationFn, errorMessage) {
+            if (!input) return true;
+
+            const isValid = validationFn(input.value);
+
+            if (isValid) {
+                input.style.borderColor = '#10b981';
+                input.style.backgroundColor = '';
+            } else {
+                input.style.borderColor = '#ef4444';
+                input.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            }
+
+            return isValid;
+        }
+
+        // Name validation
+        if (nameInput) {
+            nameInput.addEventListener('blur', function() {
+                validateField(this,
+                    value => value.trim().length >= 2,
+                    'Name must be at least 2 characters'
+                );
+            });
+        }
+
+        // Email validation
+        if (emailInput) {
+            emailInput.addEventListener('blur', function() {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                validateField(this,
+                    value => emailRegex.test(value),
+                    'Please enter a valid email address'
+                );
+            });
+        }
+
+        // Change detection
+        function hasChanges() {
+            return nameInput.value !== originalName || emailInput.value !== originalEmail;
+        }
+
+        function updateSubmitButton() {
+            if (hasChanges()) {
+                submitButton.style.background = 'linear-gradient(45deg, #10b981, #059669, #10b981)';
+                submitButton.textContent = '🚀 Save Changes';
+                submitButton.disabled = false;
+            } else {
+                submitButton.style.background = 'linear-gradient(45deg, #6b7280, #4b5563)';
+                submitButton.textContent = '🔄 No Changes';
+                submitButton.disabled = true;
+            }
+        }
+
+        // Monitor for changes
+        [nameInput, emailInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', updateSubmitButton);
+            }
+        });
+
+        // Form submission handling
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Validate all fields
+                let isValid = true;
+
+                if (nameInput && !nameInput.value.trim()) {
+                    isValid = false;
+                    nameInput.focus();
+                    nameInput.style.borderColor = '#ef4444';
+                    nameInput.style.animation = 'validationError 0.5s ease';
+                }
+
+                if (emailInput && !emailInput.value.trim()) {
+                    isValid = false;
+                    if (isValid) emailInput.focus();
+                    emailInput.style.borderColor = '#ef4444';
+                    emailInput.style.animation = 'validationError 0.5s ease';
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('🎮 Please fill in all required fields to update your profile!');
+                    return false;
+                }
+
+                if (!hasChanges()) {
+                    e.preventDefault();
+                    alert('🎯 No changes detected! Modify some fields to update the player.');
+                    return false;
+                }
+
+                // Add loading state
+                if (submitButton) {
+                    submitButton.textContent = '🚀 Updating Player...';
+                    submitButton.disabled = true;
+                    form.classList.add('form-loading');
+                }
+
+                // Show success message (will be replaced by page redirect)
+                setTimeout(() => {
+                    form.classList.add('form-success');
+                }, 100);
+            });
+        }
+
+        // Gaming atmosphere effects
+        function addFormGlow() {
+            const formCard = document.querySelector('.form-card');
+            if (formCard) {
+                const colors = ['#3b82f6', '#8b5cf6', '#10b981'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                formCard.style.boxShadow = `0 0 50px ${randomColor}40`;
+
+                setTimeout(() => {
+                    formCard.style.boxShadow = '';
+                }, 3000);
+            }
+        }
+
+        // Add glow effect every 12 seconds
+        setInterval(addFormGlow, 12000);
+
+        // Input field gaming effects
+        const inputs = document.querySelectorAll('.field-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'scale(1.02)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + S = Save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (hasChanges() && !submitButton.disabled) {
+                    submitButton.click();
+                }
+            }
+
+            // Escape = Cancel
+            if (e.key === 'Escape') {
+                const cancelButton = document.querySelector('.cancel-button');
+                if (cancelButton) {
+                    if (hasChanges()) {
+                        if (confirm('🚪 You have unsaved changes. Are you sure you want to cancel?')) {
+                            window.location.href = cancelButton.href;
+                        }
+                    } else {
+                        window.location.href = cancelButton.href;
+                    }
+                }
+            }
+        });
+
+        // Success animation on submit
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                document.body.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+                setTimeout(() => {
+                    document.body.style.background = '';
+                }, 1000);
+            }, 100);
+        });
+
+        // Delete button confirmation enhancement
+        const deleteButton = document.querySelector('.delete-button');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function(e) {
+                // Add dramatic effect before confirmation
+                this.style.transform = 'scale(0.95)';
+                this.style.filter = 'brightness(1.2)';
+                
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                    this.style.filter = 'brightness(1)';
+                }, 100);
+            });
+
+            // Hover effects
+            deleteButton.addEventListener('mouseenter', function() {
+                // Add danger zone glow
+                const dangerZone = this.closest('div[style*="border: 2px solid #ef4444"]');
+                if (dangerZone) {
+                    dangerZone.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.5)';
+                }
+            });
+
+            deleteButton.addEventListener('mouseleave', function() {
+                const dangerZone = this.closest('div[style*="border: 2px solid #ef4444"]');
+                if (dangerZone) {
+                    dangerZone.style.boxShadow = '';
+                }
+            });
+        }
+
+        // Initialize states
+        updateSubmitButton();
+
+        // Auto-save to localStorage (optional)
+        function saveFormData() {
+            const formData = {
+                name: nameInput?.value || '',
+                email: emailInput?.value || '',
+                timestamp: Date.now()
+            };
+            localStorage.setItem(`editUser_${window.location.pathname}`, JSON.stringify(formData));
+        }
+
+        // Save form data on input
+        inputs.forEach(input => {
+            input.addEventListener('input', saveFormData);
+        });
+    });
+</script>
+{% endblock %}
