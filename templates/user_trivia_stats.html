@@ -32,6 +32,7 @@
                     <div class="performance-badge-large badge-no-data">
                         🎮 No Data Yet
                     </div>
+                    <div style="position: absolute; top: -20px; right: -20px; font-size: 2rem; z-index: 10000; animation: float 2s ease-in-out infinite; pointer-events: none;">💤</div>
                 {% else %}
                     {% set performance = get_performance_badge(stats.best_score) %}
                     <div class="performance-badge-large badge-{{ performance.class }}">
