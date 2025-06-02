@@ -9,6 +9,21 @@ class DataManagerInterface(ABC):
         pass
 
     @abstractmethod
+    def get_user_by_id(self, user_id):
+        """Return a specific user by ID"""
+        pass
+
+    @abstractmethod
+    def update_user(self, user_id, updated_data):
+        """Update a user by ID with new data"""
+        pass
+
+    @abstractmethod
+    def delete_user(self, user_id):
+        """Delete a user by ID"""
+        pass
+
+    @abstractmethod
     def get_user_movies(self, user_id):
         """Return a list of movies for a specific user"""
         pass

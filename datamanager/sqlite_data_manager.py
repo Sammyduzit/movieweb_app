@@ -19,6 +19,55 @@ class SQLiteDataManager(DataManagerInterface):
         users = User.query.all()
         return [user.to_dict() for user in users]
 
+    def get_user_by_id(self, user_id):
+        """
+        Return a specific user by ID.
+
+        :param user_id: The ID of the user
+        :return: User dictionary or None if not found
+        """
+        user = User.query.get(user_id)
+        if user:
+            return user.to_dict()
+        return None
+
+    def update_user(self, user_id, updated_data):
+        """
+        Update a user by ID with new data.
+
+        :param user_id: The ID of the user to update
+        :param updated_data: Dictionary containing updated user data
+        :return: Dictionary representation of the updated user or None if not found
+        """
+        user = User.query.get(user_id)
+        if not user:
+            return None
+
+        allowed_fields = {'name', 'email'}
+
+        for field, value in updated_data.items():
+            if field in allowed_fields:
+                setattr(user, field, value)
+
+        db.session.commit()
+        return user.to_dict()
+
+    def delete_user(self, user_id):
+        """
+        Delete a user by ID.
+
+        :param user_id: The ID of the user to delete
+        :return: True if deleted successfully, False if user not found
+        """
+        user = User.query.get(user_id)
+        if not user:
+            return False
+
+        db.session.delete(user)
+        db.session.commit()
+
+        return True
+
     def get_user_movies(self, user_id):
         """
         Return a list of all movies for a specific user.
