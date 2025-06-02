@@ -481,6 +481,43 @@
     color: white;
 }
 
+.performance-badge-large.badge-no-data {
+    background: linear-gradient(45deg, #1e293b, #374151) !important;
+    border: 2px solid #f59e0b !important;
+    border-radius: 2rem !important;
+    color: #fbbf24 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    padding: 1.5rem 2rem !important;
+    max-width: 300px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important;
+    animation: wobble 3s ease-in-out infinite !important;
+}
+
+.performance-badge-large.badge-no-data::after {
+    content: 'Get some movies and start battling! 🍿';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+@keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(1deg); }
+    75% { transform: rotate(-1deg); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
 /* ========================================
    EMPTY STATE
 ======================================== */
