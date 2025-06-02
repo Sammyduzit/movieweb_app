@@ -31,7 +31,6 @@ class TriviaService:
         :param user_id: ID of the user to validate
         :return: User dictionary if found
         """
-        """Validate that user exists, raise UserNotFoundError if not"""
         users = self.data_manager.get_all_users()
         user = next((u for u in users if u['id'] == user_id), None)
         if not user:

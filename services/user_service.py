@@ -17,8 +17,6 @@ class UserService:
         """Initialize user service with data manager."""
         self.data_manager = SQLiteDataManager()
 
-    # ==================== VALIDATION METHODS ====================
-
     def validate_email(self, email):
         """
         Validate email format using regex pattern.

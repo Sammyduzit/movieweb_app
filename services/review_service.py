@@ -18,8 +18,6 @@ class ReviewService:
     def __init__(self):
         self.data_manager = SQLiteDataManager()
 
-    # ==================== VALIDATION METHODS ====================
-
     def validate_review_data(self, review_data):
         """
         Validate review input data according to business rules.
@@ -76,8 +74,6 @@ class ReviewService:
         except (ValueError, TypeError):
             raise ValidationError('reviewer_rating',
                                   'Rating must be a valid integer')
-
-    # ==================== REVIEW OPERATIONS ====================
 
     def create_review(self, movie_id, review_data):
         """

@@ -3,7 +3,6 @@ API Usage Tracker - Tracks and enforces monthly API usage limits.
 Provides persistent storage of API call counts with automatic monthly resets.
 """
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 

@@ -3,17 +3,12 @@ OMDb Service - External API service for movie data enhancement.
 Integrates with OMDb API to fetch comprehensive movie information.
 """
 import os
-
 import requests
-
 from config import APIConfig
-
-
 
 
 class OMDbService:
     """Service to interact with OMDb API for movie data"""
-
 
     def __init__(self, api_key=None):
         """
@@ -23,7 +18,6 @@ class OMDbService:
         """
         self.api_key = api_key or os.getenv('OMDB_API_KEY')
         self.base_url = APIConfig.OMDB_BASE_URL
-
 
     def search_movie(self, title, year=None):
         """

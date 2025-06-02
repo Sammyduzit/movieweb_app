@@ -2,16 +2,13 @@
 Movie Service - Business logic for movie operations.
 Handles movie CRUD operations, validation, and external API integration.
 """
-import re
-
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-
 from config import ValidationConfig
 from datamanager import SQLiteDataManager
 from services.omdb_service import OMDbService
 from exceptions import (
     UserNotFoundError, MovieNotFoundError, ValidationError,
-    DatabaseError, ExternalAPIError, DuplicateMovieError
+    DatabaseError, DuplicateMovieError
 )
 
 
@@ -32,7 +29,6 @@ class MovieService:
         :param movie_data: Dictionary containing movie data to validate
         :return: Dictionary with validated and cleaned movie data
         """
-        # Extract and validate individual fields
         title = self._validate_title(movie_data.get('title', ''))
         director = self._validate_director(movie_data.get('director', ''))
         year = self._validate_year(movie_data.get('year'))
@@ -262,7 +258,6 @@ class MovieService:
                 raise MovieNotFoundError(movie_id)
             return result
         except IntegrityError as e:
-            # Database constraint backup
             if 'unique_user_movie' in str(e):
                 raise DuplicateMovieError(user_id, validated_data['title'], year)
             raise DatabaseError('updating movie', e)
@@ -295,7 +290,6 @@ class MovieService:
         year = movie_data.get('year')
 
         for movie in existing_movies:
-            # Skip the movie being updated
             if exclude_movie_id and movie['id'] == exclude_movie_id:
                 continue
 
