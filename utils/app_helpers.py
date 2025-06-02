@@ -72,7 +72,3 @@ def print_startup_info():
     print("🎯 Trivia gaming features enabled")
     print("📽️  OMDb API integration (set OMDB_API_KEY environment variable)")
     print("🤖 AI Trivia generation (set RAPIDAPI_KEY and OPENAI_API_KEY)")
-
-    if AppConfig.DEBUG:
-        print("⚠️  DEBUG MODE")
-    print("=" * 60)
